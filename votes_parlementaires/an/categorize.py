@@ -42,20 +42,33 @@ _TEXTE_PAT = re.compile(
 )
 
 
+def split_titre(titre) -> tuple[str | None, str | None]:
+    """Sépare le titre d'un scrutin en (action, texte) : `texte` est le nom
+    du texte législatif sous-jacent (projet/proposition de loi ou de
+    résolution, débarrassé des mentions de procédure), `action` est ce qui
+    précède dans le titre (ex: "l'amendement n° 948 de Mme Blin à l'article
+    17"), utile pour afficher une ligne courte une fois les scrutins d'un
+    même texte regroupés. Retourne (None, None) si le titre ne correspond à
+    aucun texte législatif identifiable (motion de procédure isolée...)."""
+    if not isinstance(titre, str):
+        return None, None
+    if "motion de censure" in titre:
+        return titre.strip().rstrip("."), "motion de censure"
+    if "déclaration du Gouvernement" in titre:
+        return titre.strip().rstrip("."), "déclaration du Gouvernement"
+    m = _TEXTE_PAT.search(titre)
+    if not m:
+        return None, None
+    action = titre[: m.start()].strip().rstrip(",").strip() or None
+    texte = m.group(1).strip().rstrip(".").strip()
+    return action, texte
+
+
 def extract_texte(titre) -> str | None:
     """Extrait le nom du texte législatif sous-jacent (projet/proposition de
     loi ou de résolution) à partir du titre d'un scrutin, en retirant les
     mentions de procédure (lecture, CMP, seconde délibération...)."""
-    if not isinstance(titre, str):
-        return None
-    if "motion de censure" in titre:
-        return "motion de censure"
-    if "déclaration du Gouvernement" in titre:
-        return "déclaration du Gouvernement"
-    m = _TEXTE_PAT.search(titre)
-    if not m:
-        return None
-    return m.group(1).strip().rstrip(".").strip()
+    return split_titre(titre)[1]
 
 
 def normalize_key(texte: str) -> str:

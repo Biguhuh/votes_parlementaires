@@ -88,6 +88,15 @@ une référence de dossier législatif sont disponibles). Le module
    git**, à la différence du reste de `data/` — voir l'exception dans
    `.gitignore`), avec pour clé le texte législatif normalisé.
 
+**Pourquoi 251 textes classés pour 8434 scrutins (17e législature) ?** Un
+scrutin, c'est un vote unique ; un texte de loi donne lieu à *des dizaines*
+de scrutins — un par amendement, par article, plus un par étape de la
+procédure (première lecture, commission mixte paritaire, seconde
+délibération...). Le budget 2026 (PLF) à lui seul totalise 925 scrutins pour
+un seul texte. Classer par texte plutôt que par scrutin évite de payer et de
+classer 8434 fois la même chose, et garantit que tous les votes d'un même
+texte reçoivent la même catégorie.
+
 Clé API à créer sur [platform.claude.com](https://platform.claude.com) (le
 compte Claude.ai et l'API sont facturés séparément — une clé API ne marche
 pas avec un abonnement Claude.ai). Soit exportée dans le shell, soit dans un
@@ -106,9 +115,18 @@ du cache et non d'un nouvel appel au LLM. `--dry-run` affiche ce qui serait
 classé sans appeler l'API (utile pour vérifier l'extraction des textes sans
 consommer de crédits).
 
-La taxonomie elle-même (`taxonomy.py`) est figée volontairement : la modifier
-change le classement des *futurs* textes, mais ne reclasse pas
-rétroactivement le cache déjà écrit.
+La taxonomie elle-même (`taxonomy.py`) est figée volontairement, mais **pas
+immuable** : rien n'empêche de la modifier plus tard (ajouter/renommer/
+fusionner une catégorie) si l'usage montre qu'elle ne colle plus. Deux
+choses à savoir en la modifiant :
+- Ça change le classement des *futurs* textes seulement — le cache déjà
+  écrit n'est **pas** reclassé rétroactivement. Pour reclasser l'existant
+  avec la nouvelle taxonomie, supprimer les lignes concernées (ou tout le
+  fichier `categories/<législature>.csv`) puis relancer `categorize.py`.
+- Chaque catégorie a une couleur (`color`, un hex) utilisée à la fois dans
+  l'onglet **Catégories** et sur les tags affichés à côté de chaque groupe
+  de scrutins — en ajouter une nouvelle veut dire lui choisir aussi une
+  couleur.
 
 ### Page web de consultation
 
@@ -146,15 +164,21 @@ la page affiche la date à laquelle les CSV source ont été construits (voir
 les chiffres affichés.
 
 Pour chaque député·e, la fiche (accessible en cliquant sur son nom) liste tous
-ses scrutins avec un filtre par mot-clé et un filtre par plage de dates (du /
-au), pour retrouver rapidement un scrutin précis dans un historique qui peut
-compter plusieurs milliers d'entrées.
+ses scrutins, **regroupés par texte de loi** (voir section précédente — un
+texte donne lieu à des dizaines de scrutins) plutôt qu'à plat : chaque
+groupe affiche le nom du texte, son tag de catégorie coloré, et le nombre de
+scrutins qu'il contient, avec le détail (date, amendement/article,
+position, résultat) en dessous. Un filtre par mot-clé et un filtre par
+plage de dates (du / au) permettent de retrouver rapidement un scrutin ou
+un texte précis dans un historique qui peut compter plusieurs milliers
+d'entrées. Si `categorize.py` n'a jamais été lancé, tout tombe dans un
+groupe "Autre / non classé" — les tags de catégorie ne demandent aucune
+action supplémentaire une fois le cache peuplé, ils sont lus directement
+depuis `categories/<législature>.csv` à la génération de la page.
 
 La page a un second onglet, **Catégories**, qui affiche la taxonomie de
-`votes_parlementaires/an/taxonomy.py` (voir section précédente). Pour
-l'instant c'est une table de référence : les scrutins listés dans l'onglet
-Député·e·s n'affichent pas encore leur catégorie individuellement (à faire
-une fois le cache de classification peuplé).
+`votes_parlementaires/an/taxonomy.py` (voir section précédente) avec la
+couleur de chaque catégorie.
 
 À relancer après un `python -m votes_parlementaires.an.build` pour régénérer
 la page avec des données fraîches — le fichier de sortie est simplement
@@ -165,3 +189,16 @@ Options :
 - `--legislature` : forcer une législature (défaut : la plus récente déjà
   construite dans `data/processed/an/`).
 - `--out` : chemin de sortie personnalisé.
+
+## Tests
+
+```bash
+pytest
+```
+
+Couvre l'extraction des textes législatifs (`categorize.py`), la taxonomie,
+et la génération des pages figées (`snapshots/deputes.py`, y compris le
+regroupement des scrutins et les couleurs de catégorie). Le test
+d'intégration bout-en-bout (`test_snapshots_integration.py`) se saute
+automatiquement si les CSV de la 17e législature n'ont pas encore été
+construits (`python -m votes_parlementaires.an.build`).

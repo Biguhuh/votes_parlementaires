@@ -23,6 +23,7 @@
     --pos-abst: #b98a2e;
     --pos-nv: #7c8894;
 [[PARTY_COLOR_VARS]]
+[[CATEGORY_COLOR_VARS]]
   }
 
   @media (prefers-color-scheme: dark) {
@@ -283,6 +284,26 @@
 
 [[PARTY_PILL_RULES]]
 
+  .cat-tag {
+    --cat: var(--pos-nv);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.18rem 0.55rem 0.18rem 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--cat) 16%, var(--surface));
+    border: 1px solid color-mix(in oklch, var(--cat) 34%, var(--surface));
+    color: color-mix(in oklch, var(--cat) 65%, var(--ink));
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .cat-tag .swatch { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--cat); flex: none; }
+
+[[CATEGORY_TAG_RULES]]
+
   /* -- participation + mini stats under each name ------------------ */
 
   .stats-mini { margin-top: 0.55rem; max-width: 24rem; }
@@ -471,14 +492,42 @@
 
   .modal-votes { overflow-y: auto; max-height: 42vh; padding: 0.4rem 0.75rem 1.25rem; }
 
+  .texte-group + .texte-group { margin-top: 0.3rem; border-top: 1px solid var(--border); padding-top: 0.3rem; }
+
+  .texte-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem 0.3rem;
+  }
+
+  .texte-head .texte-title {
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .texte-head .texte-count {
+    margin-left: auto;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    padding-top: 0.1rem;
+  }
+
   .vote-row {
     display: grid;
     grid-template-columns: 4.6rem 1fr auto;
     gap: 0 0.85rem;
     align-items: baseline;
-    padding: 0.55rem 0.75rem;
+    padding: 0.4rem 0.75rem 0.4rem 1.9rem;
     border-radius: 8px;
   }
+
+  .texte-group.ungrouped .vote-row { padding-left: 0.75rem; }
 
   .vote-row:hover { background: var(--surface-inset); }
 
@@ -693,7 +742,10 @@
   var POSITION_LABELS = { pour: "Pour", contre: "Contre", abstention: "Abstention", nonVotant: "Non-votant" };
 
   var raw = document.getElementById("votes-data").textContent;
-  var DATA = JSON.parse(raw);
+  var PAYLOAD = JSON.parse(raw);
+  var GROUPS = PAYLOAD.groups;
+  var DATA = PAYLOAD.deputes;
+  var CATEGORY_LABELS = [[CATEGORY_LABELS_JSON]];
 
   function normalize(text) {
     return (text || "")
@@ -758,12 +810,38 @@
     });
   }
 
+  function catTagHtml(catId) {
+    return (
+      '<span class="cat-tag cat-' + catId + '"><span class="swatch"></span>' +
+      escapeHtml(CATEGORY_LABELS[catId] || catId) + "</span>"
+    );
+  }
+
   function voteRowHtml(v) {
+    var label = v.a || v.t;
     return (
       '<div class="vote-row">' +
       '<span class="vote-date">' + escapeHtml(v.d) + "</span>" +
-      '<span class="vote-title">' + escapeHtml(v.t) + '<span class="result">' + escapeHtml(v.r) + (v.g ? " · par délégation" : "") + "</span></span>" +
+      '<span class="vote-title">' + escapeHtml(label) + '<span class="result">' + escapeHtml(v.r) + (v.g ? " · par délégation" : "") + "</span></span>" +
       '<span class="vote-badge ' + v.p + '">' + POSITION_LABELS[v.p] + "</span>" +
+      "</div>"
+    );
+  }
+
+  function texteGroupHtml(gi, votes) {
+    var g = GROUPS[gi];
+    var texte = g[0], catId = g[1];
+    var ungrouped = texte === "Autres scrutins";
+    var head = ungrouped
+      ? ""
+      : '<div class="texte-head">' + catTagHtml(catId) +
+        '<span class="texte-title">' + escapeHtml(texte) + "</span>" +
+        '<span class="texte-count">' + votes.length + (votes.length > 1 ? " scrutins" : " scrutin") + "</span>" +
+        "</div>";
+    return (
+      '<div class="texte-group' + (ungrouped ? " ungrouped" : "") + '">' +
+      head +
+      votes.map(voteRowHtml).join("") +
       "</div>"
     );
   }
@@ -788,7 +866,13 @@
       modalVotes.innerHTML = '<div class="modal-empty">Aucun scrutin ne correspond à ce filtre.</div>';
       return;
     }
-    modalVotes.innerHTML = list.map(voteRowHtml).join("");
+    var order = [];
+    var byGroup = {};
+    list.forEach(function (v) {
+      if (!byGroup[v.gi]) { byGroup[v.gi] = []; order.push(v.gi); }
+      byGroup[v.gi].push(v);
+    });
+    modalVotes.innerHTML = order.map(function (gi) { return texteGroupHtml(gi, byGroup[gi]); }).join("");
   }
 
   function applyFilters() {

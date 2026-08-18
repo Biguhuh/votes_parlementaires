@@ -16,6 +16,13 @@ import re
 from datetime import date
 from pathlib import Path
 
+from votes_parlementaires.an.categorize import (
+    FALLBACK_CATEGORY,
+    distinct_textes,
+    load_categorie_map,
+    normalize_key,
+    split_titre,
+)
 from votes_parlementaires.an.meta import read_build_date
 from votes_parlementaires.an.taxonomy import CATEGORIES
 from votes_parlementaires.config import an_snapshots_dir
@@ -90,7 +97,35 @@ def party_color(groupe_abrege: str | None) -> str:
     return EXTRA_PALETTE[idx]
 
 
-def build_depute_entry(data: ANData, acteur_ref: str) -> dict:
+class GroupRegistry:
+    """Regroupe les scrutins par texte législatif sous-jacent : un même texte
+    (ex: le PLF 2026) donne lieu à des centaines de scrutins (un par
+    amendement/article/lecture), tous rattachés au même groupe et à la même
+    catégorie plutôt que d'être classés individuellement."""
+
+    FALLBACK_KEY = "__autre__"
+
+    def __init__(self, textes_by_key: dict[str, str], categorie_map: dict[str, str]):
+        self.textes_by_key = textes_by_key
+        self.categorie_map = categorie_map
+        self.index: dict[str, int] = {}
+        self.groups: list[list[str]] = []
+
+    def get(self, titre: str) -> tuple[int, str | None]:
+        action, texte_raw = split_titre(titre)
+        if texte_raw is None:
+            key, texte_display, cat = self.FALLBACK_KEY, "Autres scrutins", FALLBACK_CATEGORY
+        else:
+            key = normalize_key(texte_raw)
+            texte_display = self.textes_by_key.get(key, texte_raw)
+            cat = self.categorie_map.get(key, FALLBACK_CATEGORY)
+        if key not in self.index:
+            self.index[key] = len(self.groups)
+            self.groups.append([texte_display, cat])
+        return self.index[key], action
+
+
+def build_depute_entry(data: ANData, acteur_ref: str, groups: GroupRegistry) -> dict:
     votes_df = data.depute_votes(acteur_ref)
     stats = data.stats_for(acteur_ref)
 
@@ -107,17 +142,21 @@ def build_depute_entry(data: ANData, acteur_ref: str) -> dict:
         since = fmt_date(dmin, MOIS_FULL)
         min_iso, max_iso = dmin, dmax
 
-    votes = [
-        {
-            "iso": row.date_scrutin or "",
-            "d": fmt_date(row.date_scrutin, MOIS_ABBR),
-            "t": row.titre or "",
-            "r": RESULT_LABELS.get(row.sort_libelle, row.sort_libelle or ""),
-            "p": row.position,
-            "g": bool(row.par_delegation) and str(row.par_delegation).lower() == "true",
-        }
-        for row in votes_df.itertuples()
-    ]
+    votes = []
+    for row in votes_df.itertuples():
+        gi, action = groups.get(row.titre)
+        votes.append(
+            {
+                "iso": row.date_scrutin or "",
+                "d": fmt_date(row.date_scrutin, MOIS_ABBR),
+                "t": row.titre or "",
+                "a": action,
+                "gi": gi,
+                "r": RESULT_LABELS.get(row.sort_libelle, row.sort_libelle or ""),
+                "p": row.position,
+                "g": bool(row.par_delegation) and str(row.par_delegation).lower() == "true",
+            }
+        )
 
     return {
         "stats": stats,
@@ -165,11 +204,19 @@ def dept_section_html(code: str, nom: str, region: str, deputes) -> str:
 
 def categories_table_html() -> str:
     return "\n".join(
-        f"          <tr><td class=\"cat-label\">{html.escape(c['label'])}</td>"
-        f"<td class=\"cat-desc\">{html.escape(c['description'])}</td>"
-        f"<td class=\"cat-id\">{html.escape(c['id'])}</td></tr>"
+        f'          <tr><td class="cat-label"><span class="cat-tag cat-{c["id"]}"><span class="swatch"></span>{html.escape(c["label"])}</span></td>'
+        f'<td class="cat-desc">{html.escape(c["description"])}</td>'
+        f'<td class="cat-id">{html.escape(c["id"])}</td></tr>'
         for c in CATEGORIES
     )
+
+
+def category_color_vars() -> str:
+    return "\n".join(f"    --cat-{c['id']}: {c['color']};" for c in CATEGORIES)
+
+
+def category_tag_rules() -> str:
+    return "\n".join(f"  .cat-tag.cat-{c['id']} {{ --cat: var(--cat-{c['id']}); }}" for c in CATEGORIES)
 
 
 def generate(departements: list[str], legislature: int | None = None, out: Path | None = None) -> Path:
@@ -183,6 +230,8 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
 
     if deps_df.empty:
         raise SystemExit(f"Aucun·e député·e trouvé·e pour les départements {codes}.")
+
+    groups = GroupRegistry(distinct_textes(data.scrutins), load_categorie_map(legislature))
 
     sections = []
     votes_data = {}
@@ -198,7 +247,7 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
         dept_names.append(nom)
         sections.append(dept_section_html(code, nom, region, sub))
         for row in sub.itertuples():
-            votes_data[row.acteur_ref] = build_depute_entry(data, row.acteur_ref)
+            votes_data[row.acteur_ref] = build_depute_entry(data, row.acteur_ref, groups)
             used_parties.add(row.groupe_abrege or "NI")
 
     party_color_vars = "\n".join(
@@ -227,7 +276,8 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
         "Clique sur un nom pour l'historique complet de ses votes."
     )
 
-    votes_json = json.dumps(votes_data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    payload = {"groups": groups.groups, "deputes": votes_data}
+    votes_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
     html_out = TEMPLATE_PATH.read_text(encoding="utf-8")
     replacements = {
@@ -242,6 +292,11 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
         "[[PARTY_PILL_RULES]]": party_pill_rules,
         "[[VOTES_JSON]]": votes_json,
         "[[CATEGORIES_HTML]]": categories_table_html(),
+        "[[CATEGORY_COLOR_VARS]]": category_color_vars(),
+        "[[CATEGORY_TAG_RULES]]": category_tag_rules(),
+        "[[CATEGORY_LABELS_JSON]]": json.dumps(
+            {c["id"]: c["label"] for c in CATEGORIES}, ensure_ascii=False
+        ).replace("</", "<\\/"),
     }
     for token, value in replacements.items():
         html_out = html_out.replace(token, value)
