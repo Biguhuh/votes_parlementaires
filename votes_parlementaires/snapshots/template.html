@@ -1,0 +1,728 @@
+<title>[[TITLE]]</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #eef1f3;
+    --surface: #ffffff;
+    --surface-inset: #f5f7f8;
+    --ink: #1b2733;
+    --ink-soft: #4c5967;
+    --ink-faint: #7c8894;
+    --border: #dbe1e6;
+    --accent: #2e4c7a;
+    --accent-ink: #ffffff;
+    --gold: #9c7a2c;
+    --shadow: 0 1px 2px rgba(27, 39, 51, 0.04), 0 8px 24px -12px rgba(27, 39, 51, 0.12);
+    --backdrop: rgba(15, 21, 28, 0.5);
+
+    --pos-pour: #2f8f5b;
+    --pos-contre: #c1443f;
+    --pos-abst: #b98a2e;
+    --pos-nv: #7c8894;
+[[PARTY_COLOR_VARS]]
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10161d;
+      --surface: #1a222b;
+      --surface-inset: #151c23;
+      --ink: #e8ecef;
+      --ink-soft: #aab4bd;
+      --ink-faint: #7c8894;
+      --border: #2a3540;
+      --accent: #8fb2df;
+      --accent-ink: #10161d;
+      --gold: #d9b463;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+      --backdrop: rgba(4, 7, 10, 0.65);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10161d;
+    --surface: #1a222b;
+    --surface-inset: #151c23;
+    --ink: #e8ecef;
+    --ink-soft: #aab4bd;
+    --ink-faint: #7c8894;
+    --border: #2a3540;
+    --accent: #8fb2df;
+    --accent-ink: #10161d;
+    --gold: #d9b463;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    --backdrop: rgba(4, 7, 10, 0.65);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 4rem;
+  }
+
+  header.masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding-bottom: 2rem;
+    margin-bottom: 2.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(1.9rem, 4.4vw, 2.7rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  .dek {
+    max-width: 56ch;
+    color: var(--ink-soft);
+    font-size: 1rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .dek .note {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+  }
+
+  .snapshot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    align-self: flex-start;
+    margin-top: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+
+  .snapshot .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--gold);
+    flex: none;
+  }
+
+  .snapshot span {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  .snapshot strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .departements {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.75rem;
+  }
+
+  section.dept {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .dept-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.15rem 1.35rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dept-head h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 1.28rem;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .dept-head .num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.95rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dept-head .region {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-top: 0.15rem;
+  }
+
+  ol.circ-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem 0.5rem 0.6rem;
+  }
+
+  ol.circ-list li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0 0.85rem;
+    align-items: start;
+    padding: 0.2rem 0.35rem;
+  }
+
+  ol.circ-list li + li { margin-top: 0.1rem; }
+
+  .circ-num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.95rem;
+  }
+
+  .circ-num::before {
+    content: "n°";
+    font-size: 0.68rem;
+    margin-right: 0.1rem;
+    opacity: 0.7;
+  }
+
+  .who {
+    appearance: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 9px;
+    padding: 0.7rem 0.5rem;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition: background 0.15s ease;
+  }
+
+  .who:hover { background: var(--surface-inset); }
+  .who:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .who .name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .who .name .arrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    transition: transform 0.15s ease;
+  }
+
+  .who:hover .name .arrow { transform: translateX(2px); color: var(--accent); }
+
+  .who .civ { font-weight: 400; color: var(--ink-faint); margin-right: 0.3rem; }
+
+  .pill {
+    --party: var(--epr);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--party) 16%, var(--surface));
+    border: 1px solid color-mix(in oklch, var(--party) 32%, var(--surface));
+  }
+
+  .pill .swatch { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--party); flex: none; }
+  .pill .label { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink); font-weight: 500; }
+  .pill .full { font-size: 0.72rem; color: var(--ink-soft); }
+
+[[PARTY_PILL_RULES]]
+
+  /* -- participation + mini stats under each name ------------------ */
+
+  .stats-mini { margin-top: 0.55rem; max-width: 24rem; }
+
+  .participation {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.35rem;
+  }
+
+  .participation b { color: var(--accent); font-weight: 600; font-size: 0.86rem; }
+  .participation .frac { color: var(--ink-faint); }
+
+  .stats-bar {
+    display: flex;
+    height: 5px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+  }
+
+  .stats-bar span { display: block; height: 100%; }
+  .stats-bar .pour { background: var(--pos-pour); }
+  .stats-bar .contre { background: var(--pos-contre); }
+  .stats-bar .abstention { background: var(--pos-abst); }
+  .stats-bar .nonVotant { background: var(--pos-nv); }
+
+  .stats-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+  }
+
+  .stats-chips .chip { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .stats-chips .chip-dot { width: 0.42rem; height: 0.42rem; border-radius: 50%; flex: none; }
+  .chip-dot.pour { background: var(--pos-pour); }
+  .chip-dot.contre { background: var(--pos-contre); }
+  .chip-dot.abstention { background: var(--pos-abst); }
+  .chip-dot.nonVotant { background: var(--pos-nv); }
+  .stats-chips .chip b { color: var(--ink-soft); font-weight: 500; }
+
+  footer.source {
+    margin-top: 2.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+
+  footer.source a { color: var(--ink-soft); }
+
+  /* -- modal --------------------------------------------------------- */
+
+  dialog#depute-modal {
+    width: min(700px, 94vw);
+    max-height: 85vh;
+    margin: auto;
+    padding: 0;
+    border: none;
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+
+  dialog#depute-modal::backdrop { background: var(--backdrop); }
+
+  .modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.35rem 1.5rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-head h3 { font-family: "Fraunces", Georgia, serif; font-weight: 500; font-size: 1.4rem; margin: 0 0 0.15rem; }
+  .modal-head .sub { font-size: 0.82rem; color: var(--ink-faint); }
+
+  .modal-close {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--surface-inset);
+    color: var(--ink-soft);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    flex: none;
+  }
+
+  .modal-close:hover { color: var(--ink); }
+  .modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .modal-stats { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .modal-stats .stats-mini { max-width: none; }
+  .modal-stats .stats-chips { font-size: 0.74rem; gap: 0.9rem; }
+  .modal-stats .participation { font-size: 0.8rem; }
+
+  .modal-filter {
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .modal-filter input[type="text"] {
+    width: 100%;
+    font: inherit;
+    font-size: 0.88rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-inset);
+    color: var(--ink);
+  }
+
+  .modal-filter input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .modal-filter input::placeholder { color: var(--ink-faint); }
+
+  .modal-filter-dates {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+
+  .modal-filter-dates label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+  }
+
+  .modal-filter-dates input[type="date"] {
+    font: inherit;
+    font-size: 0.78rem;
+    padding: 0.32rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-inset);
+    color: var(--ink);
+    color-scheme: light dark;
+  }
+
+  .modal-filter-clear {
+    margin-left: auto;
+    appearance: none;
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 0.74rem;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    padding: 0.2rem 0.3rem;
+  }
+
+  .modal-filter-clear:hover { color: var(--ink); }
+  .modal-filter-clear:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .modal-count {
+    padding: 0.6rem 1.5rem 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .modal-votes { overflow-y: auto; max-height: 42vh; padding: 0.4rem 0.75rem 1.25rem; }
+
+  .vote-row {
+    display: grid;
+    grid-template-columns: 4.6rem 1fr auto;
+    gap: 0 0.85rem;
+    align-items: baseline;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+  }
+
+  .vote-row:hover { background: var(--surface-inset); }
+
+  .vote-date {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.15rem;
+  }
+
+  .vote-title { font-size: 0.86rem; line-height: 1.4; color: var(--ink); }
+  .vote-title .result { display: block; font-size: 0.72rem; color: var(--ink-faint); margin-top: 0.15rem; }
+
+  .vote-badge {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    height: fit-content;
+  }
+
+  .vote-badge.pour { color: var(--pos-pour); background: color-mix(in oklch, var(--pos-pour) 16%, var(--surface)); }
+  .vote-badge.contre { color: var(--pos-contre); background: color-mix(in oklch, var(--pos-contre) 16%, var(--surface)); }
+  .vote-badge.abstention { color: var(--pos-abst); background: color-mix(in oklch, var(--pos-abst) 16%, var(--surface)); }
+  .vote-badge.nonVotant { color: var(--pos-nv); background: color-mix(in oklch, var(--pos-nv) 16%, var(--surface)); }
+
+  .modal-empty { padding: 2rem 1.5rem; text-align: center; color: var(--ink-faint); font-size: 0.85rem; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    section.dept { transition: box-shadow 0.2s ease; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <span class="eyebrow">[[EYEBROW]]</span>
+    <h1>[[H1]]</h1>
+    <p class="dek">[[DEK]]<span class="note">« Participation » = scrutins avec position enregistrée ÷ scrutins tenus depuis l'entrée en fonction. La majorité des scrutins ne mobilisent qu'une fraction de l'hémicycle : une absence n'y est pas enregistrée individuellement, sauf mention explicite « non-votant ».</span></p>
+    <div class="snapshot">
+      <span class="dot" aria-hidden="true"></span>
+      <span>[[SNAPSHOT_LABEL]]</span>
+    </div>
+  </header>
+
+  <div class="departements">
+[[DEPARTMENTS_HTML]]
+  </div>
+
+  <footer class="source">
+    <span>[[TOTAL_COUNT]] député·e·s au total · liste figée, ne se met pas à jour automatiquement.</span>
+    <span>Rebuild : <a href="https://data.assemblee-nationale.fr/travaux-parlementaires/votes">data.assemblee-nationale.fr</a></span>
+  </footer>
+
+</div>
+
+<dialog id="depute-modal">
+  <div class="modal-head">
+    <div>
+      <h3 id="modal-name"></h3>
+      <div class="sub" id="modal-sub"></div>
+    </div>
+    <button class="modal-close" type="button" id="modal-close" aria-label="Fermer">✕</button>
+  </div>
+  <div class="modal-stats">
+    <div class="stats-mini" id="modal-stats"></div>
+  </div>
+  <div class="modal-filter">
+    <input type="text" id="modal-filter-input" placeholder="Filtrer les scrutins par mot-clé…" autocomplete="off">
+    <div class="modal-filter-dates">
+      <label>Du <input type="date" id="modal-filter-from"></label>
+      <label>au <input type="date" id="modal-filter-to"></label>
+      <button type="button" class="modal-filter-clear" id="modal-filter-clear">Réinitialiser</button>
+    </div>
+  </div>
+  <div class="modal-count" id="modal-count"></div>
+  <div class="modal-votes" id="modal-votes"></div>
+</dialog>
+
+<script id="votes-data" type="application/json">[[VOTES_JSON]]</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var POSITIONS = ["pour", "contre", "abstention", "nonVotant"];
+  var POSITION_LABELS = { pour: "Pour", contre: "Contre", abstention: "Abstention", nonVotant: "Non-votant" };
+
+  var raw = document.getElementById("votes-data").textContent;
+  var DATA = JSON.parse(raw);
+
+  function normalize(text) {
+    return (text || "")
+      .toString()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  }
+
+  function statsBarHtml(stats) {
+    var total = POSITIONS.reduce(function (sum, p) { return sum + (stats[p] || 0); }, 0) || 1;
+    return (
+      '<div class="stats-bar">' +
+      POSITIONS.map(function (p) {
+        var pct = ((stats[p] || 0) / total) * 100;
+        return pct > 0 ? '<span class="' + p + '" style="width:' + pct + '%"></span>' : "";
+      }).join("") +
+      "</div>"
+    );
+  }
+
+  function statsChipsHtml(stats) {
+    return (
+      '<div class="stats-chips">' +
+      POSITIONS.map(function (p) {
+        return (
+          '<span class="chip"><span class="chip-dot ' + p + '"></span>' +
+          POSITION_LABELS[p] + " <b>" + (stats[p] || 0) + "</b></span>"
+        );
+      }).join("") +
+      "</div>"
+    );
+  }
+
+  function participationHtml(entry) {
+    if (!entry.possible) {
+      return '<div class="participation">Participation non calculable (aucun vote enregistré)</div>';
+    }
+    var pct = Math.round((entry.recorded / entry.possible) * 100);
+    return (
+      '<div class="participation"><b>' + pct + " %</b> de participation " +
+      '<span class="frac">(' + entry.recorded + " / " + entry.possible + " scrutins depuis le " + entry.since + ")</span></div>"
+    );
+  }
+
+  function fullStatsHtml(entry) {
+    return participationHtml(entry) + statsBarHtml(entry.stats) + statsChipsHtml(entry.stats);
+  }
+
+  function renderMiniStats() {
+    document.querySelectorAll("[data-stats-for]").forEach(function (el) {
+      var ref = el.getAttribute("data-stats-for");
+      var entry = DATA[ref];
+      if (!entry) return;
+      el.innerHTML = fullStatsHtml(entry);
+    });
+  }
+
+  function escapeHtml(text) {
+    return (text || "").replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function voteRowHtml(v) {
+    return (
+      '<div class="vote-row">' +
+      '<span class="vote-date">' + escapeHtml(v.d) + "</span>" +
+      '<span class="vote-title">' + escapeHtml(v.t) + '<span class="result">' + escapeHtml(v.r) + (v.g ? " · par délégation" : "") + "</span></span>" +
+      '<span class="vote-badge ' + v.p + '">' + POSITION_LABELS[v.p] + "</span>" +
+      "</div>"
+    );
+  }
+
+  var modal = document.getElementById("depute-modal");
+  var modalName = document.getElementById("modal-name");
+  var modalSub = document.getElementById("modal-sub");
+  var modalStats = document.getElementById("modal-stats");
+  var modalVotes = document.getElementById("modal-votes");
+  var modalCount = document.getElementById("modal-count");
+  var modalFilter = document.getElementById("modal-filter-input");
+  var modalFrom = document.getElementById("modal-filter-from");
+  var modalTo = document.getElementById("modal-filter-to");
+  var modalClear = document.getElementById("modal-filter-clear");
+  var modalClose = document.getElementById("modal-close");
+
+  var currentVotes = [];
+
+  function renderVoteList(list) {
+    modalCount.textContent = list.length + (list.length > 1 ? " scrutins" : " scrutin");
+    if (list.length === 0) {
+      modalVotes.innerHTML = '<div class="modal-empty">Aucun scrutin ne correspond à ce filtre.</div>';
+      return;
+    }
+    modalVotes.innerHTML = list.map(voteRowHtml).join("");
+  }
+
+  function applyFilters() {
+    var q = normalize(modalFilter.value.trim());
+    var from = modalFrom.value;
+    var to = modalTo.value;
+    var filtered = currentVotes.filter(function (v) {
+      if (q && normalize(v.t).indexOf(q) === -1) return false;
+      if (from && v.iso < from) return false;
+      if (to && v.iso > to) return false;
+      return true;
+    });
+    renderVoteList(filtered);
+  }
+
+  function openDepute(btn) {
+    var ref = btn.getAttribute("data-ref");
+    var entry = DATA[ref];
+    if (!entry) return;
+
+    modalName.innerHTML = '<span style="color:var(--ink-faint);font-weight:400;">' + btn.getAttribute("data-civ") + " </span>" + btn.getAttribute("data-name");
+    modalSub.textContent = btn.getAttribute("data-party-full") + " (" + btn.getAttribute("data-party-label") + ")";
+    modalStats.innerHTML = fullStatsHtml(entry);
+
+    currentVotes = entry.votes;
+    modalFilter.value = "";
+    modalFrom.value = "";
+    modalTo.value = "";
+    modalFrom.min = modalTo.min = entry.minDate || "";
+    modalFrom.max = modalTo.max = entry.maxDate || "";
+    renderVoteList(currentVotes);
+
+    modal.showModal();
+    modalFilter.focus();
+  }
+
+  document.querySelectorAll(".who").forEach(function (btn) {
+    btn.addEventListener("click", function () { openDepute(btn); });
+  });
+
+  modalClose.addEventListener("click", function () { modal.close(); });
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) modal.close();
+  });
+
+  modalFilter.addEventListener("input", applyFilters);
+  modalFrom.addEventListener("change", applyFilters);
+  modalTo.addEventListener("change", applyFilters);
+  modalClear.addEventListener("click", function () {
+    modalFilter.value = "";
+    modalFrom.value = "";
+    modalTo.value = "";
+    renderVoteList(currentVotes);
+    modalFilter.focus();
+  });
+
+  renderMiniStats();
+})();
+</script>

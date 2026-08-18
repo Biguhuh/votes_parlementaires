@@ -92,7 +92,7 @@ class ANData:
 
     # -- députés --------------------------------------------------------
 
-    def _stats_for(self, acteur_ref: str) -> dict:
+    def stats_for(self, acteur_ref: str) -> dict:
         if acteur_ref in self.vote_counts.index:
             row = self.vote_counts.loc[acteur_ref]
             return {p: int(row[p]) for p in POSITIONS}
@@ -123,7 +123,7 @@ class ANData:
             ]
         )
         for r in records:
-            r["stats"] = self._stats_for(r["acteur_ref"])
+            r["stats"] = self.stats_for(r["acteur_ref"])
         return records
 
     def depute(self, acteur_ref: str) -> dict | None:

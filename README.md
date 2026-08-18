@@ -63,6 +63,7 @@ Options :
 | `votes.csv` | 1 ligne par (scrutin × député) : position (pour/contre/abstention/non-votant), vote par délégation |
 | `acteurs.csv` | référentiel des députés (nom, prénom, département/circonscription du siège actif, groupe politique actuel) |
 | `organes.csv` | référentiel des groupes politiques / organes |
+| `_meta.json` | date de construction (`built_at`), utilisée par les pages figées (voir plus bas) pour afficher une date fiable |
 
 `votes.csv` référence `scrutins.csv` par `scrutin_uid`, `acteurs.csv` par
 `acteur_ref`, et `organes.csv` par `groupe_organe_ref`.
@@ -85,3 +86,34 @@ avec Ctrl+C, ou en tuant le process qui écoute sur le port 5050.
 Cette appli charge tout `data/processed/an/<législature>/` en mémoire (pandas)
 au démarrage — pas de base de données, pas de dépendance réseau après le
 premier chargement.
+
+### Pages figées (données gelées, partageables hors-ligne)
+
+Pour partager un instantané autonome (un seul fichier HTML, sans serveur ni
+réseau) listant les député·e·s de certains départements avec leurs
+statistiques de vote et l'historique complet de leurs scrutins :
+
+```bash
+python -m votes_parlementaires.snapshots.deputes --departements 17 79
+```
+
+Écrit `data/snapshots/an/<législature>/deputes-17-79.html`. Les données sont
+entièrement embarquées dans le fichier (pas d'appel réseau à l'ouverture) et
+la page affiche la date à laquelle les CSV source ont été construits (voir
+`votes_parlementaires/an/meta.py`), pour qu'on sache toujours de quand datent
+les chiffres affichés.
+
+Pour chaque député·e, la fiche (accessible en cliquant sur son nom) liste tous
+ses scrutins avec un filtre par mot-clé et un filtre par plage de dates (du /
+au), pour retrouver rapidement un scrutin précis dans un historique qui peut
+compter plusieurs milliers d'entrées.
+
+À relancer après un `python -m votes_parlementaires.an.build` pour régénérer
+la page avec des données fraîches — le fichier de sortie est simplement
+écrasé, sans accumulation de versions datées.
+
+Options :
+- `--departements` : liste de numéros de département (défaut : `17 79`).
+- `--legislature` : forcer une législature (défaut : la plus récente déjà
+  construite dans `data/processed/an/`).
+- `--out` : chemin de sortie personnalisé.

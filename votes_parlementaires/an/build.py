@@ -13,6 +13,7 @@ from votes_parlementaires.an.download import (
     scrutins_zip,
 )
 from votes_parlementaires.an.legislature import detect_current_legislature
+from votes_parlementaires.an.meta import write_build_meta
 from votes_parlementaires.an.parse import (
     iter_scrutins,
     load_acteurs,
@@ -137,6 +138,8 @@ def main(legislature: int | None = None, skip_download: bool = False) -> None:
 
     print("Construction acteurs.csv / organes.csv...")
     build_acteurs_and_organes(legislature)
+
+    write_build_meta(legislature)
 
     print("Terminé.")
 
