@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Votes parlementaires — Assemblée nationale</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="app-header">
+  <h1>Votes parlementaires <span class="muted">— Assemblée nationale</span></h1>
+  <div id="meta" class="meta muted"></div>
+</header>
+
+<div class="legend">
+  <span class="chip"><span class="dot dot-pour"></span>Pour</span>
+  <span class="chip"><span class="dot dot-contre"></span>Contre</span>
+  <span class="chip"><span class="dot dot-abstention"></span>Abstention</span>
+  <span class="chip"><span class="dot dot-nonVotant"></span>Non-votant</span>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="deputes">Députés</button>
+  <button class="tab" data-tab="groupes">Groupes</button>
+  <button class="tab" data-tab="scrutins">Scrutins</button>
+</nav>
+
+<main>
+  <section id="view-deputes" class="view active">
+    <div class="toolbar">
+      <input type="search" id="deputes-search" placeholder="Nom, département ou n° de circonscription…" />
+    </div>
+    <div id="deputes-results" class="results"></div>
+    <div id="deputes-pagination" class="pagination"></div>
+  </section>
+
+  <section id="view-groupes" class="view">
+    <div id="groupes-results" class="results groupes-grid"></div>
+  </section>
+
+  <section id="view-scrutins" class="view">
+    <div class="toolbar">
+      <input type="search" id="scrutins-search" placeholder="Rechercher un scrutin par titre…" />
+    </div>
+    <div id="scrutins-results" class="results"></div>
+    <div id="scrutins-pagination" class="pagination"></div>
+  </section>
+</main>
+
+<div id="modal-backdrop" class="modal-backdrop">
+  <div class="modal">
+    <button id="modal-close" class="modal-close" aria-label="Fermer">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
