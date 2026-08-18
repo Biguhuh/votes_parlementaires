@@ -88,8 +88,13 @@ une référence de dossier législatif sont disponibles). Le module
    git**, à la différence du reste de `data/` — voir l'exception dans
    `.gitignore`), avec pour clé le texte législatif normalisé.
 
+Clé API à créer sur [platform.claude.com](https://platform.claude.com) (le
+compte Claude.ai et l'API sont facturés séparément — une clé API ne marche
+pas avec un abonnement Claude.ai). Soit exportée dans le shell, soit dans un
+fichier `.env` à la racine du projet (jamais commité, voir `.gitignore`) :
+
 ```bash
-export ANTHROPIC_API_KEY=...   # clé créée sur console.anthropic.com
+echo 'ANTHROPIC_API_KEY=...' > .env
 python -m votes_parlementaires.an.categorize
 ```
 

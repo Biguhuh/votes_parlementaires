@@ -9,13 +9,14 @@ déclenchent un appel API, ce qui rend le processus quasi-intégralement
 reproductible d'un passage à l'autre.
 
 Usage :
-    export ANTHROPIC_API_KEY=...
+    echo 'ANTHROPIC_API_KEY=...' > .env   # jamais commité (voir .gitignore)
     python -m votes_parlementaires.an.categorize
     python -m votes_parlementaires.an.categorize --dry-run   # sans appel API
 """
 
 import argparse
 import csv
+import os
 import re
 from pathlib import Path
 
@@ -24,6 +25,7 @@ import pandas as pd
 from votes_parlementaires.an.build import scrutins_csv
 from votes_parlementaires.an.legislature import detect_current_legislature
 from votes_parlementaires.an.taxonomy import CATEGORIES, CATEGORY_IDS, CATEGORY_LABELS
+from votes_parlementaires.config import ROOT_DIR
 
 CACHE_DIR = Path(__file__).parent / "categories"
 DEFAULT_MODEL = "claude-opus-5"
@@ -60,6 +62,21 @@ def normalize_key(texte: str) -> str:
     t = texte.replace("’", "'").replace("œ", "oe")
     t = re.sub(r"\s+", " ", t).strip().rstrip(".")
     return t.lower()
+
+
+def _load_dotenv() -> None:
+    """Charge un fichier .env à la racine du projet (KEY=VALUE par ligne)
+    dans les variables d'environnement, sans écraser une valeur déjà
+    définie. Évite une dépendance à python-dotenv pour un seul cas d'usage."""
+    dotenv_path = ROOT_DIR / ".env"
+    if not dotenv_path.exists():
+        return
+    for line in dotenv_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
 
 
 def cache_path(legislature: int) -> Path:
@@ -181,6 +198,7 @@ def run(legislature: int | None = None, model: str = DEFAULT_MODEL, batch_size: 
 
     import anthropic
 
+    _load_dotenv()
     client = anthropic.Anthropic()
     new_categories: dict[str, str] = {}
     for i in range(0, len(missing_keys), batch_size):
