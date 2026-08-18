@@ -219,7 +219,22 @@ def category_tag_rules() -> str:
     return "\n".join(f"  .cat-tag.cat-{c['id']} {{ --cat: var(--cat-{c['id']}); }}" for c in CATEGORIES)
 
 
-def generate(departements: list[str], legislature: int | None = None, out: Path | None = None) -> Path:
+class DeputesData:
+    """Données déjà collectées pour un ensemble de départements : la table
+    des député·e·s, le registre de groupes (textes législatifs + catégorie),
+    et l'entrée (stats + votes) de chacun·e. Partagé entre les générateurs de
+    sortie (HTML, Excel...) pour ne pas dupliquer la collecte."""
+
+    def __init__(self, data: ANData, deps_df, groups: GroupRegistry, entries: dict, dept_names: list[str]):
+        self.data = data
+        self.deps_df = deps_df
+        self.groups = groups
+        self.entries = entries
+        self.dept_names = dept_names
+        self.legislature = data.legislature
+
+
+def load_deputes_data(departements: list[str], legislature: int | None = None) -> DeputesData:
     data = ANData(legislature)
     legislature = data.legislature
 
@@ -233,9 +248,26 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
 
     groups = GroupRegistry(distinct_textes(data.scrutins), load_categorie_map(legislature))
 
-    sections = []
-    votes_data = {}
+    entries = {}
     dept_names = []
+    for code in codes:
+        sub = deps_df[deps_df["num_departement"] == code]
+        if sub.empty:
+            continue
+        dept_names.append(sub.iloc[0]["departement"])
+        for row in sub.itertuples():
+            entries[row.acteur_ref] = build_depute_entry(data, row.acteur_ref, groups)
+
+    return DeputesData(data, deps_df, groups, entries, dept_names)
+
+
+def generate(departements: list[str], legislature: int | None = None, out: Path | None = None) -> Path:
+    dd = load_deputes_data(departements, legislature)
+    data, deps_df, groups, votes_data, dept_names = dd.data, dd.deps_df, dd.groups, dd.entries, dd.dept_names
+    legislature = dd.legislature
+    codes = [str(c) for c in departements]
+
+    sections = []
     used_parties = set()
 
     for code in codes:
@@ -244,10 +276,8 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
             continue
         nom = sub.iloc[0]["departement"]
         region = sub.iloc[0]["region"]
-        dept_names.append(nom)
         sections.append(dept_section_html(code, nom, region, sub))
         for row in sub.itertuples():
-            votes_data[row.acteur_ref] = build_depute_entry(data, row.acteur_ref, groups)
             used_parties.add(row.groupe_abrege or "NI")
 
     party_color_vars = "\n".join(

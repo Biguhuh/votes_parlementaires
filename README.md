@@ -166,15 +166,16 @@ les chiffres affichés.
 Pour chaque député·e, la fiche (accessible en cliquant sur son nom) liste tous
 ses scrutins, **regroupés par texte de loi** (voir section précédente — un
 texte donne lieu à des dizaines de scrutins) plutôt qu'à plat : chaque
-groupe affiche le nom du texte, son tag de catégorie coloré, et le nombre de
-scrutins qu'il contient, avec le détail (date, amendement/article,
-position, résultat) en dessous. Un filtre par mot-clé et un filtre par
-plage de dates (du / au) permettent de retrouver rapidement un scrutin ou
-un texte précis dans un historique qui peut compter plusieurs milliers
-d'entrées. Si `categorize.py` n'a jamais été lancé, tout tombe dans un
-groupe "Autre / non classé" — les tags de catégorie ne demandent aucune
-action supplémentaire une fois le cache peuplé, ils sont lus directement
-depuis `categories/<législature>.csv` à la génération de la page.
+groupe est un bloc repliable (replié par défaut, sauf s'il ne contient qu'un
+seul scrutin) affichant le nom du texte, son tag de catégorie coloré, et le
+nombre de scrutins qu'il contient. Le premier filtre est **par catégorie**
+(chips cliquables, cumulables, avec compteur) ; le filtre par mot-clé et par
+plage de dates (du / au) est secondaire, replié dans un panneau
+"Filtrer par mot-clé ou par date". Si `categorize.py` n'a jamais été lancé,
+tout tombe dans un groupe "Autre / non classé" — les tags de catégorie ne
+demandent aucune action supplémentaire une fois le cache peuplé, ils sont
+lus directement depuis `categories/<législature>.csv` à la génération de la
+page.
 
 La page a un second onglet, **Catégories**, qui affiche la taxonomie de
 `votes_parlementaires/an/taxonomy.py` (voir section précédente) avec la
@@ -190,6 +191,31 @@ Options :
   construite dans `data/processed/an/`).
 - `--out` : chemin de sortie personnalisé.
 
+### Export Excel (mêmes données, un onglet par député·e)
+
+Même contenu que la page figée, en classeur `.xlsx` — pratique pour trier,
+filtrer ou croiser les données dans un tableur plutôt que dans un
+navigateur :
+
+```bash
+python -m votes_parlementaires.snapshots.deputes_xlsx --departements 17 79
+```
+
+Écrit `data/snapshots/an/<législature>/deputes-17-79.xlsx` avec :
+- un onglet **Sommaire** (un·e député·e par ligne : groupe, département,
+  participation, décompte pour/contre/abstention/non-votant, lien vers son
+  onglet),
+- un onglet **Catégories** (la taxonomie, comme sur la page HTML),
+- un onglet par député·e, un scrutin par ligne (date, texte de loi,
+  catégorie, détail, position, résultat, vote par délégation), en tableau
+  Excel natif (`Table`) avec filtres automatiques et en-tête figé — le
+  filtre par catégorie ou par texte se fait avec les filtres de colonne
+  standards d'Excel, pas besoin d'UI dédiée comme sur la page HTML.
+
+Mêmes options que `snapshots.deputes` (`--departements`, `--legislature`,
+`--out`), et même remarque : à relancer après un rebuild des données pour
+une version à jour.
+
 ## Tests
 
 ```bash
@@ -197,8 +223,9 @@ pytest
 ```
 
 Couvre l'extraction des textes législatifs (`categorize.py`), la taxonomie,
-et la génération des pages figées (`snapshots/deputes.py`, y compris le
-regroupement des scrutins et les couleurs de catégorie). Le test
-d'intégration bout-en-bout (`test_snapshots_integration.py`) se saute
+et la génération des pages figées HTML et Excel (`snapshots/deputes.py`,
+`snapshots/deputes_xlsx.py`, y compris le regroupement des scrutins et les
+couleurs de catégorie). Les tests d'intégration bout-en-bout
+(`test_snapshots_integration.py`, `test_snapshots_deputes_xlsx.py`) se sautent
 automatiquement si les CSV de la 17e législature n'ont pas encore été
 construits (`python -m votes_parlementaires.an.build`).

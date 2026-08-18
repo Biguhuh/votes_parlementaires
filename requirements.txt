@@ -13,6 +13,9 @@ flask
 # classification des scrutins par thème (votes_parlementaires.an.categorize)
 anthropic
 
+# export Excel (votes_parlementaires.snapshots.deputes_xlsx)
+openpyxl
+
 # tests/linter
 black
 pytest
