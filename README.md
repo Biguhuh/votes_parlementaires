@@ -68,6 +68,43 @@ Options :
 `votes.csv` référence `scrutins.csv` par `scrutin_uid`, `acteurs.csv` par
 `acteur_ref`, et `organes.csv` par `groupe_organe_ref`.
 
+### Classification des scrutins par thème
+
+L'export officiel de l'AN ne contient **aucun tag thématique** (vérifié
+directement sur `Scrutins.json` — seuls un titre en texte libre et parfois
+une référence de dossier législatif sont disponibles). Le module
+`votes_parlementaires.an.categorize` comble ce manque :
+
+1. Il extrait le texte législatif sous-jacent (projet/proposition de loi ou
+   de résolution) du titre de chaque scrutin, via
+   `votes_parlementaires.an.categorize.extract_texte`.
+2. Il classe chaque texte distinct dans une catégorie de la taxonomie figée
+   de `votes_parlementaires/an/taxonomy.py` (finances publiques, agriculture
+   & alimentation, écologie/énergie/climat, sécurité & justice, santé,
+   institutions, etc. — 14 catégories, voir l'onglet **Catégories** des
+   pages figées).
+3. Le résultat est mis en cache dans
+   `votes_parlementaires/an/categories/<législature>.csv` (**versionné dans
+   git**, à la différence du reste de `data/` — voir l'exception dans
+   `.gitignore`), avec pour clé le texte législatif normalisé.
+
+```bash
+export ANTHROPIC_API_KEY=...   # clé créée sur console.anthropic.com
+python -m votes_parlementaires.an.categorize
+```
+
+Le point clé : un texte déjà présent dans le cache **n'est jamais reclassé**
+— seuls les textes réellement nouveaux (nouveaux scrutins depuis le dernier
+passage) déclenchent un appel à l'API Claude. Le classement est donc stable
+à quasiment 100% d'un passage à l'autre, puisque l'essentiel du corpus vient
+du cache et non d'un nouvel appel au LLM. `--dry-run` affiche ce qui serait
+classé sans appeler l'API (utile pour vérifier l'extraction des textes sans
+consommer de crédits).
+
+La taxonomie elle-même (`taxonomy.py`) est figée volontairement : la modifier
+change le classement des *futurs* textes, mais ne reclasse pas
+rétroactivement le cache déjà écrit.
+
 ### Page web de consultation
 
 Une petite appli locale (Flask + JS vanilla) pour parcourir les votes : recherche
@@ -107,6 +144,12 @@ Pour chaque député·e, la fiche (accessible en cliquant sur son nom) liste tou
 ses scrutins avec un filtre par mot-clé et un filtre par plage de dates (du /
 au), pour retrouver rapidement un scrutin précis dans un historique qui peut
 compter plusieurs milliers d'entrées.
+
+La page a un second onglet, **Catégories**, qui affiche la taxonomie de
+`votes_parlementaires/an/taxonomy.py` (voir section précédente). Pour
+l'instant c'est une table de référence : les scrutins listés dans l'onglet
+Député·e·s n'affichent pas encore leur catégorie individuellement (à faire
+une fois le cache de classification peuplé).
 
 À relancer après un `python -m votes_parlementaires.an.build` pour régénérer
 la page avec des données fraîches — le fichier de sortie est simplement

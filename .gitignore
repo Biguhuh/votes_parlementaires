@@ -5,5 +5,6 @@
 raw_data/
 data/
 *.csv
+!votes_parlementaires/an/categories/*.csv
 **/__pycache__/
 .env

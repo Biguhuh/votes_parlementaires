@@ -10,6 +10,9 @@ pandas
 # webapp
 flask
 
+# classification des scrutins par thème (votes_parlementaires.an.categorize)
+anthropic
+
 # tests/linter
 black
 pytest

@@ -17,6 +17,7 @@ from datetime import date
 from pathlib import Path
 
 from votes_parlementaires.an.meta import read_build_date
+from votes_parlementaires.an.taxonomy import CATEGORIES
 from votes_parlementaires.config import an_snapshots_dir
 from votes_parlementaires.webapp.data import ANData
 
@@ -162,6 +163,15 @@ def dept_section_html(code: str, nom: str, region: str, deputes) -> str:
     </section>"""
 
 
+def categories_table_html() -> str:
+    return "\n".join(
+        f"          <tr><td class=\"cat-label\">{html.escape(c['label'])}</td>"
+        f"<td class=\"cat-desc\">{html.escape(c['description'])}</td>"
+        f"<td class=\"cat-id\">{html.escape(c['id'])}</td></tr>"
+        for c in CATEGORIES
+    )
+
+
 def generate(departements: list[str], legislature: int | None = None, out: Path | None = None) -> Path:
     data = ANData(legislature)
     legislature = data.legislature
@@ -231,6 +241,7 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
         "[[PARTY_COLOR_VARS]]": party_color_vars,
         "[[PARTY_PILL_RULES]]": party_pill_rules,
         "[[VOTES_JSON]]": votes_json,
+        "[[CATEGORIES_HTML]]": categories_table_html(),
     }
     for token, value in replacements.items():
         html_out = html_out.replace(token, value)

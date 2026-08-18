@@ -513,6 +513,102 @@
   @media (prefers-reduced-motion: no-preference) {
     section.dept { transition: box-shadow 0.2s ease; }
   }
+
+  /* -- onglets ------------------------------------------------------- */
+
+  .tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font: inherit;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.6rem 0.2rem;
+    margin-bottom: -1px;
+    cursor: pointer;
+  }
+
+  .tab:hover { color: var(--ink-soft); }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel[hidden] { display: none; }
+
+  .categories-intro {
+    max-width: 60ch;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0 0 1.5rem;
+  }
+
+  .categories-intro code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.85em;
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+  }
+
+  .categories-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+
+  table.categories-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  table.categories-table th {
+    text-align: left;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table.categories-table td {
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  table.categories-table tr:last-child td { border-bottom: none; }
+
+  table.categories-table td.cat-label {
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  table.categories-table td.cat-desc { color: var(--ink-soft); }
+
+  table.categories-table td.cat-id {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
 </style>
 
 <div class="page">
@@ -527,14 +623,40 @@
     </div>
   </header>
 
-  <div class="departements">
-[[DEPARTMENTS_HTML]]
+  <div class="tabs" role="tablist">
+    <button class="tab" type="button" role="tab" id="tab-deputes" aria-selected="true" aria-controls="panel-deputes">Député·e·s</button>
+    <button class="tab" type="button" role="tab" id="tab-categories" aria-selected="false" aria-controls="panel-categories">Catégories</button>
   </div>
 
-  <footer class="source">
-    <span>[[TOTAL_COUNT]] député·e·s au total · liste figée, ne se met pas à jour automatiquement.</span>
-    <span>Rebuild : <a href="https://data.assemblee-nationale.fr/travaux-parlementaires/votes">data.assemblee-nationale.fr</a></span>
-  </footer>
+  <div class="tab-panel" id="panel-deputes" role="tabpanel" aria-labelledby="tab-deputes">
+    <div class="departements">
+[[DEPARTMENTS_HTML]]
+    </div>
+
+    <footer class="source">
+      <span>[[TOTAL_COUNT]] député·e·s au total · liste figée, ne se met pas à jour automatiquement.</span>
+      <span>Rebuild : <a href="https://data.assemblee-nationale.fr/travaux-parlementaires/votes">data.assemblee-nationale.fr</a></span>
+    </footer>
+  </div>
+
+  <div class="tab-panel" id="panel-categories" role="tabpanel" aria-labelledby="tab-categories" hidden>
+    <p class="categories-intro">
+      Taxonomie figée utilisée pour classer les scrutins par thème (narcotrafic, agriculture,
+      écologie...), via <code>votes_parlementaires.an.categorize</code>. Ce classement n'est pas
+      encore répercuté sur l'historique de votes ci-contre — cette page liste la taxonomie de
+      référence, pas encore les scrutins classés.
+    </p>
+    <div class="categories-table-wrap">
+      <table class="categories-table">
+        <thead>
+          <tr><th>Catégorie</th><th>Description</th><th>Identifiant</th></tr>
+        </thead>
+        <tbody>
+[[CATEGORIES_HTML]]
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
 
@@ -724,5 +846,16 @@
   });
 
   renderMiniStats();
+
+  var tabs = document.querySelectorAll(".tab");
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      tabs.forEach(function (t) {
+        var selected = t === tab;
+        t.setAttribute("aria-selected", String(selected));
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !selected;
+      });
+    });
+  });
 })();
 </script>
