@@ -36,7 +36,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html votes_parlementaires/an/categories/
+          git add docs/index.html docs/index.xlsx votes_parlementaires/an/categories/
           if git diff --staged --quiet; then
             echo "Rien de nouveau à publier."
           else

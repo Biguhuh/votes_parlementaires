@@ -185,11 +185,19 @@ couleur de chaque catégorie.
 la page avec des données fraîches — le fichier de sortie est simplement
 écrasé, sans accumulation de versions datées.
 
+Par défaut, la génération de la page HTML génère aussi automatiquement le
+classeur Excel correspondant (même département·s, même dossier de sortie,
+même nom de fichier avec l'extension `.xlsx`) et ajoute un bouton
+« Télécharger en Excel » sur la page — utile pour publier les deux fichiers
+ensemble (voir GitHub Pages plus bas).
+
 Options :
 - `--departements` : liste de numéros de département (défaut : `17 79`).
 - `--legislature` : forcer une législature (défaut : la plus récente déjà
   construite dans `data/processed/an/`).
 - `--out` : chemin de sortie personnalisé.
+- `--no-xlsx` : ne génère pas le classeur Excel associé, ni le bouton de
+  téléchargement sur la page.
 
 ### Export Excel (mêmes données, un onglet par député·e)
 
@@ -215,6 +223,20 @@ python -m votes_parlementaires.snapshots.deputes_xlsx --departements 17 79
 Mêmes options que `snapshots.deputes` (`--departements`, `--legislature`,
 `--out`), et même remarque : à relancer après un rebuild des données pour
 une version à jour.
+
+### Publication sur GitHub Pages
+
+La page figée (`docs/index.html`) et son classeur Excel (`docs/index.xlsx`)
+sont publiés via [GitHub Pages](https://pages.github.com/) (source :
+branche `master`, dossier `/docs`) : **https://biguhuh.github.io/votes_parlementaires/**.
+Le repo doit être public pour que Pages soit disponible gratuitement.
+
+Une GitHub Action (`.github/workflows/update-data.yml`) automatise la mise
+à jour : chaque lundi (ou manuellement via l'onglet *Actions* du repo,
+bouton *Run workflow*), elle relance `an.build`, `an.categorize`, régénère
+`docs/index.html`/`docs/index.xlsx`, et pousse le résultat s'il a changé.
+Elle a besoin d'un secret de repo `ANTHROPIC_API_KEY` (*Settings → Secrets
+and variables → Actions*) pour l'étape de classification.
 
 ## Tests
 

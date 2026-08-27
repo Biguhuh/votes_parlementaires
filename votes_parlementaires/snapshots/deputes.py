@@ -261,7 +261,12 @@ def load_deputes_data(departements: list[str], legislature: int | None = None) -
     return DeputesData(data, deps_df, groups, entries, dept_names)
 
 
-def generate(departements: list[str], legislature: int | None = None, out: Path | None = None) -> Path:
+def generate(
+    departements: list[str],
+    legislature: int | None = None,
+    out: Path | None = None,
+    xlsx_href: str | None = None,
+) -> Path:
     dd = load_deputes_data(departements, legislature)
     data, deps_df, groups, votes_data, dept_names = dd.data, dd.deps_df, dd.groups, dd.entries, dd.dept_names
     legislature = dd.legislature
@@ -316,6 +321,11 @@ def generate(departements: list[str], legislature: int | None = None, out: Path 
         "[[H1]]": h1,
         "[[DEK]]": dek,
         "[[SNAPSHOT_LABEL]]": snapshot_label,
+        "[[XLSX_LINK_HTML]]": (
+            f'<a class="xlsx-link" href="{html.escape(xlsx_href)}" download>⇩ Télécharger en Excel (.xlsx)</a>'
+            if xlsx_href
+            else ""
+        ),
         "[[DEPARTMENTS_HTML]]": "\n".join(sections),
         "[[TOTAL_COUNT]]": str(len(deps_df)),
         "[[PARTY_COLOR_VARS]]": party_color_vars,
@@ -343,9 +353,19 @@ def main() -> None:
     parser.add_argument("--departements", nargs="+", default=["17", "79"], help="Numéros de département (ex: 17 79).")
     parser.add_argument("--legislature", type=int, default=None, help="Forcer une législature (par défaut: la plus récente déjà construite).")
     parser.add_argument("--out", type=Path, default=None, help="Chemin de sortie (par défaut: data/snapshots/an/<législature>/deputes-<deps>.html).")
+    parser.add_argument("--no-xlsx", action="store_true", help="Ne génère pas le classeur Excel associé, ni le lien de téléchargement sur la page.")
     args = parser.parse_args()
 
-    out = generate(args.departements, legislature=args.legislature, out=args.out)
+    xlsx_href = None
+    if not args.no_xlsx:
+        from votes_parlementaires.snapshots.deputes_xlsx import generate as generate_xlsx
+
+        xlsx_out_arg = args.out.with_suffix(".xlsx") if args.out is not None else None
+        xlsx_out = generate_xlsx(args.departements, legislature=args.legislature, out=xlsx_out_arg)
+        xlsx_href = xlsx_out.name
+        print(f"Classeur Excel généré : {xlsx_out}")
+
+    out = generate(args.departements, legislature=args.legislature, out=args.out, xlsx_href=xlsx_href)
     print(f"Page générée : {out}")
 
 

@@ -119,17 +119,44 @@
     color: var(--ink-faint);
   }
 
+  .masthead-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.4rem;
+  }
+
   .snapshot {
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
     align-self: flex-start;
-    margin-top: 0.4rem;
     padding: 0.5rem 0.85rem;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
     box-shadow: var(--shadow);
+  }
+
+  .xlsx-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    align-self: flex-start;
+    padding: 0.5rem 0.9rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+
+  .xlsx-link:hover {
+    opacity: 0.85;
   }
 
   .snapshot .dot {
@@ -727,9 +754,12 @@
     <span class="eyebrow">[[EYEBROW]]</span>
     <h1>[[H1]]</h1>
     <p class="dek">[[DEK]]<span class="note">« Participation » = scrutins avec position enregistrée ÷ scrutins tenus depuis l'entrée en fonction. La majorité des scrutins ne mobilisent qu'une fraction de l'hémicycle : une absence n'y est pas enregistrée individuellement, sauf mention explicite « non-votant ».</span></p>
-    <div class="snapshot">
-      <span class="dot" aria-hidden="true"></span>
-      <span>[[SNAPSHOT_LABEL]]</span>
+    <div class="masthead-meta">
+      <div class="snapshot">
+        <span class="dot" aria-hidden="true"></span>
+        <span>[[SNAPSHOT_LABEL]]</span>
+      </div>
+      [[XLSX_LINK_HTML]]
     </div>
   </header>
 
