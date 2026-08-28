@@ -28,3 +28,14 @@ def an_snapshots_dir(legislature: int) -> Path:
     """Dossier des pages HTML figées (données gelées, partageables hors-ligne),
     namespacée par législature (voir an_raw_dir)."""
     return SNAPSHOTS_DIR / "an" / str(legislature)
+
+
+# Contrairement à l'Assemblée nationale, le Sénat n'a pas de notion de
+# "législature" (renouvellement par moitié tous les 3 ans, mandat de 6 ans) :
+# pas de namespacing par législature pour ces dossiers.
+def senat_raw_dir() -> Path:
+    return RAW_DIR / "senat"
+
+
+def senat_processed_dir() -> Path:
+    return PROCESSED_DIR / "senat"

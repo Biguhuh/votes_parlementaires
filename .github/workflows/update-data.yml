@@ -2,7 +2,7 @@ name: Mise à jour des données et publication de la page
 
 on:
   schedule:
-    - cron: "0 6 * * 1"  # tous les lundis à 6h UTC
+    - cron: "0 6 * * *"  # tous les jours à 6h UTC
   workflow_dispatch: {}
 
 permissions:
@@ -24,19 +24,34 @@ jobs:
       - name: Télécharge et construit les données AN
         run: python -m votes_parlementaires.an.build
 
-      - name: Classe les textes de loi par thème
+      - name: Classe les textes de loi AN par thème
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python -m votes_parlementaires.an.categorize
 
-      - name: Régénère la page figée
-        run: python -m votes_parlementaires.snapshots.deputes --departements 17 79 --out docs/index.html
+      - name: Construit la liste des sénateurs
+        run: python -m votes_parlementaires.senat.build
+
+      - name: Construit les scrutins + votes du Sénat (session en cours)
+        run: python -m votes_parlementaires.senat.build_votes
+
+      - name: Construit les dates de mandat des sénateurs
+        run: python -m votes_parlementaires.senat.build_mandats --skip-download
+
+      - name: Classe les textes de loi Sénat par thème
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m votes_parlementaires.senat.categorize
+
+      - name: Régénère la page figée (député·e·s + sénateur·rice·s)
+        run: python -m votes_parlementaires.snapshots.page --departements 17 79 --out docs/index.html
 
       - name: Commit et push si changement
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/index.xlsx votes_parlementaires/an/categories/
+          git add docs/index.html docs/index-deputes.xlsx docs/index-senateurs.xlsx \
+            votes_parlementaires/an/categories/ data/processed/senat/
           if git diff --staged --quiet; then
             echo "Rien de nouveau à publier."
           else

@@ -6,5 +6,20 @@ raw_data/
 data/
 *.csv
 !votes_parlementaires/an/categories/*.csv
+# Contrairement à l'AN (archive JSON officielle, retéléchargée en un seul
+# gros fichier), le Sénat n'a pas d'API : ses scrutins sont scrapés page par
+# page. On committe donc les CSV construits pour que le run quotidien ne
+# refasse que la session en cours (voir senat/build_votes.py), au lieu de
+# rescraper des milliers de pages à chaque fois. Chaque niveau de dossier
+# ignoré doit être réautorisé explicitement pour que git y descende, et les
+# sous-dossiers non voulus (données brutes, pages figées intermédiaires)
+# re-ignorés explicitement puisque "!data/" les rouvre tous par défaut.
+!data/
+data/raw/
+data/snapshots/
+!data/processed/
+data/processed/an/
+!data/processed/senat/
+!data/processed/senat/*.csv
 **/__pycache__/
 .env

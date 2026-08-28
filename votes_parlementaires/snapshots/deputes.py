@@ -87,6 +87,17 @@ def slugify(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
+def last_scrutin_label(scrutins) -> str:
+    """Date du scrutin le plus récent d'un DataFrame de scrutins, distincte
+    de la date de rafraîchissement des données : la source (data.gouv,
+    senat.fr) peut avoir du retard sur les scrutins tenus les jours
+    précédents."""
+    dates = scrutins["date_scrutin"].dropna()
+    if dates.empty:
+        return "inconnu"
+    return fmt_date(dates.max(), MOIS_FULL)
+
+
 def party_color(groupe_abrege: str | None) -> str:
     if not groupe_abrege:
         return KNOWN_PARTY_COLORS["ni"]
@@ -234,7 +245,9 @@ class DeputesData:
         self.legislature = data.legislature
 
 
-def load_deputes_data(departements: list[str], legislature: int | None = None) -> DeputesData:
+def load_deputes_data(
+    departements: list[str], legislature: int | None = None, groups: GroupRegistry | None = None
+) -> DeputesData:
     data = ANData(legislature)
     legislature = data.legislature
 
@@ -246,7 +259,8 @@ def load_deputes_data(departements: list[str], legislature: int | None = None) -
     if deps_df.empty:
         raise SystemExit(f"Aucun·e député·e trouvé·e pour les départements {codes}.")
 
-    groups = GroupRegistry(distinct_textes(data.scrutins), load_categorie_map(legislature))
+    if groups is None:
+        groups = GroupRegistry(distinct_textes(data.scrutins), load_categorie_map(legislature))
 
     entries = {}
     dept_names = []
@@ -294,9 +308,9 @@ def generate(
 
     build_date = read_build_date(legislature)
     if build_date is None:
-        snapshot_label = "Données figées (date de construction inconnue — reconstruire via build.py) — source data.assemblee-nationale.fr"
+        snapshot_label = "Date de rafraîchissement inconnue (reconstruire via build.py) — source data.assemblee-nationale.fr"
     else:
-        snapshot_label = f"Données figées au <strong>{fmt_date(build_date.isoformat(), MOIS_FULL)}</strong> — source data.assemblee-nationale.fr"
+        snapshot_label = f"Rafraîchi le <strong>{fmt_date(build_date.isoformat(), MOIS_FULL)}</strong> — source data.assemblee-nationale.fr"
 
     if len(dept_names) > 1:
         joined_names = ", ".join(dept_names[:-1]) + " & " + dept_names[-1]
@@ -305,10 +319,12 @@ def generate(
 
     title = f"Députés de {joined_names}"
     eyebrow = f"Assemblée nationale · {to_roman(legislature)}<sup>e</sup> législature"
-    h1 = f"{len(dept_names)} départements, {len(deps_df)} circonscriptions"
+    h1 = joined_names
+    subtitle = f"<strong>{len(deps_df)}</strong> circonscriptions sur {len(dept_names)} départements"
     dek = (
-        f"Les député·e·s en exercice de {joined_names} ({', '.join(codes)}), classés par circonscription. "
-        "Clique sur un nom pour l'historique complet de ses votes."
+        f"Cette page présente les votes des député·e·s en exercice de {joined_names} "
+        f"({', '.join(codes)}), classés par circonscription. "
+        "Cliquez sur un nom pour consulter l'historique complet de ses votes."
     )
 
     payload = {"groups": groups.groups, "deputes": votes_data}
@@ -319,6 +335,7 @@ def generate(
         "[[TITLE]]": title,
         "[[EYEBROW]]": eyebrow,
         "[[H1]]": h1,
+        "[[SUBTITLE]]": subtitle,
         "[[DEK]]": dek,
         "[[SNAPSHOT_LABEL]]": snapshot_label,
         "[[XLSX_LINK_HTML]]": (
@@ -328,6 +345,13 @@ def generate(
         ),
         "[[DEPARTMENTS_HTML]]": "\n".join(sections),
         "[[TOTAL_COUNT]]": str(len(deps_df)),
+        "[[LAST_SCRUTIN_AN]]": last_scrutin_label(data.scrutins),
+        # Généré seul (hors snapshots.page), ce module ne produit pas
+        # l'onglet Sénateur·rice·s : ces placeholders restent vides.
+        "[[SENATEURS_XLSX_LINK_HTML]]": "",
+        "[[SENATEURS_DEPARTMENTS_HTML]]": "",
+        "[[SENATEURS_TOTAL_COUNT]]": "0",
+        "[[LAST_SCRUTIN_SENAT]]": "n/a",
         "[[PARTY_COLOR_VARS]]": party_color_vars,
         "[[PARTY_PILL_RULES]]": party_pill_rules,
         "[[VOTES_JSON]]": votes_json,

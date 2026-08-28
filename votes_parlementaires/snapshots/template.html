@@ -104,12 +104,26 @@
     color: var(--ink);
   }
 
+  .subtitle {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .subtitle strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
   .dek {
-    max-width: 56ch;
     color: var(--ink-soft);
     font-size: 1rem;
     line-height: 1.55;
     margin: 0;
+    text-align: justify;
+    text-justify: inter-word;
   }
 
   .dek .note {
@@ -157,6 +171,12 @@
 
   .xlsx-link:hover {
     opacity: 0.85;
+  }
+
+  .panel-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.25rem;
   }
 
   .snapshot .dot {
@@ -239,6 +259,10 @@
   }
 
   ol.circ-list li + li { margin-top: 0.1rem; }
+
+  /* Sénat : pas de circonscriptions (siège départemental), donc pas de
+     colonne de numéro — une seule colonne pleine largeur. */
+  ol.circ-list.flat li { grid-template-columns: 1fr; }
 
   .circ-num {
     font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -753,29 +777,47 @@
   <header class="masthead">
     <span class="eyebrow">[[EYEBROW]]</span>
     <h1>[[H1]]</h1>
-    <p class="dek">[[DEK]]<span class="note">« Participation » = scrutins avec position enregistrée ÷ scrutins tenus depuis l'entrée en fonction. La majorité des scrutins ne mobilisent qu'une fraction de l'hémicycle : une absence n'y est pas enregistrée individuellement, sauf mention explicite « non-votant ».</span></p>
+    <p class="subtitle">[[SUBTITLE]]</p>
+    <p class="dek">[[DEK]]<span class="note">« Participation » = scrutins avec position enregistrée ÷ scrutins tenus depuis l'entrée en fonction (Assemblée) ou le début du mandat en cours (Sénat). À l'Assemblée, la majorité des scrutins ne mobilisent qu'une fraction de l'hémicycle : une absence n'y est pas enregistrée individuellement, sauf mention explicite « non-votant ». Au Sénat, la position de chaque sénateur·rice — y compris « n'a pas pris part au vote » — est systématiquement publiée.</span></p>
     <div class="masthead-meta">
       <div class="snapshot">
         <span class="dot" aria-hidden="true"></span>
         <span>[[SNAPSHOT_LABEL]]</span>
       </div>
-      [[XLSX_LINK_HTML]]
     </div>
   </header>
 
   <div class="tabs" role="tablist">
     <button class="tab" type="button" role="tab" id="tab-deputes" aria-selected="true" aria-controls="panel-deputes">Député·e·s</button>
+    <button class="tab" type="button" role="tab" id="tab-senateurs" aria-selected="false" aria-controls="panel-senateurs">Sénateur·rice·s</button>
     <button class="tab" type="button" role="tab" id="tab-categories" aria-selected="false" aria-controls="panel-categories">Catégories</button>
   </div>
 
   <div class="tab-panel" id="panel-deputes" role="tabpanel" aria-labelledby="tab-deputes">
+    <div class="panel-toolbar">
+      [[XLSX_LINK_HTML]]
+    </div>
     <div class="departements">
 [[DEPARTMENTS_HTML]]
     </div>
 
     <footer class="source">
-      <span>[[TOTAL_COUNT]] député·e·s au total · liste figée, ne se met pas à jour automatiquement.</span>
+      <span>[[TOTAL_COUNT]] député·e·s au total · mise à jour automatique quotidienne · dernier scrutin pris en compte : [[LAST_SCRUTIN_AN]].</span>
       <span>Rebuild : <a href="https://data.assemblee-nationale.fr/travaux-parlementaires/votes">data.assemblee-nationale.fr</a></span>
+    </footer>
+  </div>
+
+  <div class="tab-panel" id="panel-senateurs" role="tabpanel" aria-labelledby="tab-senateurs" hidden>
+    <div class="panel-toolbar">
+      [[SENATEURS_XLSX_LINK_HTML]]
+    </div>
+    <div class="departements">
+[[SENATEURS_DEPARTMENTS_HTML]]
+    </div>
+
+    <footer class="source">
+      <span>[[SENATEURS_TOTAL_COUNT]] sénateur·rice·s au total · mise à jour automatique quotidienne · dernier scrutin pris en compte : [[LAST_SCRUTIN_SENAT]].</span>
+      <span>Source : <a href="https://www.senat.fr/scrutin-public/index.html">senat.fr</a></span>
     </footer>
   </div>
 
@@ -783,8 +825,8 @@
     <p class="categories-intro">
       Taxonomie figée utilisée pour classer les scrutins par thème (narcotrafic, agriculture,
       écologie...), via <code>votes_parlementaires.an.categorize</code>. Chaque groupe de scrutins
-      dans l'onglet Député·e·s affiche un tag de la catégorie ci-dessous, et peut être filtré par
-      catégorie depuis la fiche d'un·e député·e.
+      dans les onglets Député·e·s et Sénateur·rice·s affiche un tag de la catégorie ci-dessous, et
+      peut être filtré par catégorie depuis la fiche d'un·e élu·e.
     </p>
     <div class="categories-table-wrap">
       <table class="categories-table">

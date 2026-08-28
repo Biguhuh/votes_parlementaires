@@ -16,6 +16,10 @@ anthropic
 # export Excel (votes_parlementaires.snapshots.deputes_xlsx)
 openpyxl
 
+# scraping des pages de scrutins publics du Sénat, pas d'open data disponible
+# (votes_parlementaires.senat.parse_scrutin)
+beautifulsoup4
+
 # tests/linter
 black
 pytest
