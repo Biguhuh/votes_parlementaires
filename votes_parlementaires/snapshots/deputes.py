@@ -197,8 +197,19 @@ def depute_button_html(row, entry_key: str) -> str:
         </li>"""
 
 
-def dept_section_html(code: str, nom: str, region: str, deputes) -> str:
-    items = "\n".join(depute_button_html(row, row.acteur_ref) for row in deputes.itertuples())
+def vacant_seat_html(num_circonscription) -> str:
+    return f"""        <li class="vacant">
+          <span class="circ-num">{num_circonscription}</span>
+          <div class="vacant-note">Siège actuellement vacant</div>
+        </li>"""
+
+
+def dept_section_html(code: str, nom: str, region: str, deputes, vacants=()) -> str:
+    """`vacants` : numéros des circonscriptions du département sans député·e
+    en exercice, affichées à leur place dans l'ordre des circonscriptions."""
+    entries = [(int(row.num_circonscription), depute_button_html(row, row.acteur_ref)) for row in deputes.itertuples()]
+    entries += [(int(n), vacant_seat_html(n)) for n in vacants]
+    items = "\n".join(html_ for _, html_ in sorted(entries))
     return f"""    <section class="dept">
       <div class="dept-head">
         <div>
@@ -236,13 +247,47 @@ class DeputesData:
     et l'entrée (stats + votes) de chacun·e. Partagé entre les générateurs de
     sortie (HTML, Excel...) pour ne pas dupliquer la collecte."""
 
-    def __init__(self, data: ANData, deps_df, groups: GroupRegistry, entries: dict, dept_names: list[str]):
+    def __init__(
+        self,
+        data: ANData,
+        deps_df,
+        groups: GroupRegistry,
+        entries: dict,
+        dept_names: list[str],
+        vacants: dict[str, list[str]],
+    ):
         self.data = data
         self.deps_df = deps_df
+        self.vacants = vacants
         self.groups = groups
         self.entries = entries
         self.dept_names = dept_names
         self.legislature = data.legislature
+
+
+def vacant_seats(data: ANData, deps_df, codes: list[str]) -> dict[str, list[str]]:
+    """{code de département: numéros des circonscriptions sans député·e en
+    exercice}. Vide si la liste des circonscriptions n'a pas encore été
+    construite (an.build) : on n'affiche alors aucune vacance."""
+    if data.circonscriptions is None:
+        return {}
+    vacants = {}
+    for code in codes:
+        toutes = data.circonscriptions[data.circonscriptions["num_departement"] == code]["num_circonscription"]
+        pourvues = set(deps_df[deps_df["num_departement"] == code]["num_circonscription"].astype(str))
+        manquantes = sorted(set(toutes) - pourvues, key=int)
+        if manquantes:
+            vacants[code] = manquantes
+    return vacants
+
+
+def circonscriptions_label(nb_pourvues: int, nb_vacants: int) -> str:
+    """Ex: "<strong>8</strong> circonscriptions (dont 1 siège vacant)"."""
+    total = nb_pourvues + nb_vacants
+    label = f"<strong>{total}</strong> circonscriptions"
+    if nb_vacants:
+        label += f" (dont <strong>{nb_vacants}</strong> siège{'s' if nb_vacants > 1 else ''} vacant{'s' if nb_vacants > 1 else ''})"
+    return label
 
 
 def load_deputes_data(
@@ -272,7 +317,7 @@ def load_deputes_data(
         for row in sub.itertuples():
             entries[row.acteur_ref] = build_depute_entry(data, row.acteur_ref, groups)
 
-    return DeputesData(data, deps_df, groups, entries, dept_names)
+    return DeputesData(data, deps_df, groups, entries, dept_names, vacant_seats(data, deps_df, codes))
 
 
 def generate(
@@ -295,7 +340,7 @@ def generate(
             continue
         nom = sub.iloc[0]["departement"]
         region = sub.iloc[0]["region"]
-        sections.append(dept_section_html(code, nom, region, sub))
+        sections.append(dept_section_html(code, nom, region, sub, dd.vacants.get(code, ())))
         for row in sub.itertuples():
             used_parties.add(row.groupe_abrege or "NI")
 
@@ -320,7 +365,8 @@ def generate(
     title = f"Députés de {joined_names}"
     eyebrow = f"Assemblée nationale · {to_roman(legislature)}<sup>e</sup> législature"
     h1 = joined_names
-    subtitle = f"<strong>{len(deps_df)}</strong> circonscriptions sur {len(dept_names)} départements"
+    nb_vacants = sum(len(v) for v in dd.vacants.values())
+    subtitle = f"{circonscriptions_label(len(deps_df), nb_vacants)} sur {len(dept_names)} départements"
     dek = (
         f"Cette page présente les votes des député·e·s en exercice de {joined_names} "
         f"({', '.join(codes)}), classés par circonscription. "

@@ -46,6 +46,13 @@ class ANData:
         self.votes = pd.read_csv(d / "votes.csv", dtype=ID_DTYPES)
         self.acteurs = pd.read_csv(d / "acteurs.csv", dtype=ID_DTYPES)
         self.organes = pd.read_csv(d / "organes.csv", dtype=ID_DTYPES)
+        circos_path = d / "circonscriptions.csv"
+        # Absent tant que an.build n'a pas été relancé depuis son introduction.
+        self.circonscriptions = (
+            pd.read_csv(circos_path, dtype={"num_departement": "string", "num_circonscription": "string"})
+            if circos_path.exists()
+            else None
+        )
 
         self._prepare()
 

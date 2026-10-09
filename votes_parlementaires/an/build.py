@@ -17,6 +17,7 @@ from votes_parlementaires.an.meta import write_build_meta
 from votes_parlementaires.an.parse import (
     iter_scrutins,
     load_acteurs,
+    load_circonscriptions,
     load_organes,
     scrutin_record,
     vote_records,
@@ -69,6 +70,10 @@ def organes_csv(legislature: int) -> Path:
     return an_processed_dir(legislature) / "organes.csv"
 
 
+def circonscriptions_csv(legislature: int) -> Path:
+    return an_processed_dir(legislature) / "circonscriptions.csv"
+
+
 def ensure_paths(legislature: int) -> None:
     an_raw_dir(legislature).mkdir(parents=True, exist_ok=True)
     an_processed_dir(legislature).mkdir(parents=True, exist_ok=True)
@@ -113,6 +118,11 @@ def build_acteurs_and_organes(legislature: int) -> None:
 
     acteurs.to_csv(acteurs_csv(legislature), index=False)
     organes.to_csv(organes_csv(legislature), index=False)
+
+    circonscriptions = load_circonscriptions(
+        [acteurs_zip(legislature), acteurs_historique_zip(legislature)], legislature
+    )
+    circonscriptions.to_csv(circonscriptions_csv(legislature), index=False)
 
 
 def main(legislature: int | None = None, skip_download: bool = False) -> None:

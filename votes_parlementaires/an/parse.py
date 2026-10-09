@@ -124,6 +124,29 @@ def load_acteurs(zip_path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def load_circonscriptions(zip_paths: list[Path], legislature: int) -> pd.DataFrame:
+    """Toutes les circonscriptions de la législature, y compris celles dont le
+    siège est actuellement vacant (député·e élu·e sénateur·rice, décédé·e,
+    nommé·e...) : un siège vacant n'a plus de député·e "actif·ve", donc
+    n'apparaît pas dans `load_acteurs`, mais le mandat terminé de son dernier
+    titulaire, conservé dans l'historique, le référence encore."""
+    rows = set()
+    for zip_path in zip_paths:
+        with zipfile.ZipFile(zip_path) as zf:
+            for name in zf.namelist():
+                if "/acteur/" not in f"/{name}" or not name.endswith(".json"):
+                    continue
+                with zf.open(name) as f:
+                    acteur = json.load(f)["acteur"]
+                for mandat in _mandats(acteur):
+                    if mandat.get("typeOrgane") != "ASSEMBLEE" or str(mandat.get("legislature")) != str(legislature):
+                        continue
+                    lieu = (mandat.get("election") or {}).get("lieu") or {}
+                    if lieu.get("numDepartement") and lieu.get("numCirco"):
+                        rows.add((lieu["numDepartement"], lieu["numCirco"], lieu.get("departement")))
+    return pd.DataFrame(sorted(rows), columns=["num_departement", "num_circonscription", "departement"])
+
+
 def load_organes(zip_path: Path) -> pd.DataFrame:
     rows = []
     with zipfile.ZipFile(zip_path) as zf:

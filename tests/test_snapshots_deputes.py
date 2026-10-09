@@ -90,3 +90,28 @@ def test_category_color_vars_and_tag_rules_cover_every_category():
     for c in CATEGORIES:
         assert f"--cat-{c['id']}: {c['color']};" in vars_css
         assert f".cat-tag.cat-{c['id']}" in rules_css
+
+
+def test_circonscriptions_label_mentions_vacant_seats_only_when_any():
+    from votes_parlementaires.snapshots.deputes import circonscriptions_label
+
+    assert circonscriptions_label(8, 0) == "<strong>8</strong> circonscriptions"
+    assert "dont <strong>1</strong> siège vacant" in circonscriptions_label(7, 1)
+    assert "<strong>8</strong>" in circonscriptions_label(7, 1)
+    assert "sièges vacants" in circonscriptions_label(6, 2)
+
+
+def test_dept_section_places_vacant_seat_in_circonscription_order():
+    import pandas as pd
+
+    from votes_parlementaires.snapshots.deputes import dept_section_html
+
+    deputes = pd.DataFrame(
+        [
+            {"acteur_ref": "PA1", "nom_complet": "A Un", "civ": "M.", "groupe_abrege": "RN", "groupe_libelle": "RN", "num_circonscription": 1},
+            {"acteur_ref": "PA3", "nom_complet": "C Trois", "civ": "M.", "groupe_abrege": "RN", "groupe_libelle": "RN", "num_circonscription": 3},
+        ]
+    )
+    out = dept_section_html("17", "Charente-Maritime", "Nouvelle-Aquitaine", deputes, vacants=["2"])
+
+    assert out.index("A Un") < out.index("Siège actuellement vacant") < out.index("C Trois")

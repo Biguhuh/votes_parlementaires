@@ -280,6 +280,15 @@
 
   ol.circ-list li + li { margin-top: 0.1rem; }
 
+  ol.circ-list li.vacant .circ-num { padding-top: 0.2rem; }
+
+  .vacant-note {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.86rem;
+    font-style: italic;
+    color: var(--ink-faint);
+  }
+
   /* Sénat : pas de circonscriptions (siège départemental), donc pas de
      colonne de numéro — une seule colonne pleine largeur. */
   ol.circ-list.flat li { grid-template-columns: 1fr; }
@@ -817,7 +826,7 @@
   <header class="masthead">
     <span class="eyebrow">Assemblée nationale &amp; Sénat</span>
     <h1>Charente-Maritime & Deux-Sèvres</h1>
-    <p class="subtitle"><strong>7</strong> circonscriptions à l'Assemblée · <strong>5</strong> sièges au Sénat</p>
+    <p class="subtitle"><strong>8</strong> circonscriptions (dont <strong>1</strong> siège vacant) à l'Assemblée · <strong>5</strong> sièges au Sénat</p>
     <p class="dek">Cette page présente les votes des député·e·s et sénateur·rice·s en exercice de Charente-Maritime & Deux-Sèvres (17, 79), à l'Assemblée nationale comme au Sénat. Cliquez sur un nom pour consulter l'historique complet de ses votes.<span class="note">« Participation » = scrutins avec position enregistrée ÷ scrutins tenus depuis l'entrée en fonction (Assemblée) ou le début de leur service continu au Sénat (réélection comprise, dans la limite des scrutins couverts, soit depuis octobre 2020). À l'Assemblée, la majorité des scrutins ne mobilisent qu'une fraction de l'hémicycle : une absence n'y est pas enregistrée individuellement, sauf mention explicite « non-votant ». Au Sénat, la position de chaque sénateur·rice — y compris « n'a pas pris part au vote » — est systématiquement publiée.</span></p>
     <div class="masthead-meta">
       <div class="snapshot">
@@ -878,6 +887,10 @@
             <span class="pill party-rn"><span class="swatch"></span><span class="label">RN</span><span class="full">Rassemblement National</span></span>
             <div class="stats-mini" data-stats-for="PA840837"></div>
           </button>
+        </li>
+        <li class="vacant">
+          <span class="circ-num">5</span>
+          <div class="vacant-note">Siège actuellement vacant</div>
         </li>
       </ol>
     </section>

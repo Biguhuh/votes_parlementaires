@@ -27,6 +27,7 @@ from votes_parlementaires.snapshots.deputes import (
     category_color_vars,
     category_tag_rules,
     categories_table_html,
+    circonscriptions_label,
     dept_section_html as an_dept_section_html,
     fmt_date,
     last_scrutin_label,
@@ -77,7 +78,11 @@ def generate(
     for code in codes:
         sub = dd.deps_df[dd.deps_df["num_departement"] == code]
         if not sub.empty:
-            an_sections.append(an_dept_section_html(code, sub.iloc[0]["departement"], sub.iloc[0]["region"], sub))
+            an_sections.append(
+                an_dept_section_html(
+                    code, sub.iloc[0]["departement"], sub.iloc[0]["region"], sub, dd.vacants.get(code, ())
+                )
+            )
             used_parties.update(sub["groupe_abrege"].fillna("NI"))
 
         sub_sen = sd.sen_df[sd.sen_df["num_departement"] == code]
@@ -110,8 +115,9 @@ def generate(
     title = f"Député·e·s et sénateur·rice·s de {joined_names}"
     eyebrow = "Assemblée nationale &amp; Sénat"
     h1 = joined_names
+    nb_vacants = sum(len(v) for v in dd.vacants.values())
     subtitle = (
-        f"<strong>{len(dd.deps_df)}</strong> circonscriptions à l'Assemblée · "
+        f"{circonscriptions_label(len(dd.deps_df), nb_vacants)} à l'Assemblée · "
         f"<strong>{len(sd.sen_df)}</strong> sièges au Sénat"
     )
     dek = (
