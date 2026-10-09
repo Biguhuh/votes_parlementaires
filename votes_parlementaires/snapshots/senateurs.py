@@ -27,6 +27,10 @@ from votes_parlementaires.snapshots.deputes import (
 def build_senateur_entry(data: SenatData, senateur_ref: str, groups: GroupRegistry, depuis_iso: str | None) -> dict:
     votes_df = data.senateur_votes(senateur_ref)
     if depuis_iso:
+        # Les scrutins ne sont scrapés que depuis une certaine date : pour un·e
+        # sénateur·rice en poste depuis plus longtemps (réélu·e), la période
+        # comptée commence au premier scrutin disponible.
+        depuis_iso = max(depuis_iso, data.scrutins["date_scrutin"].min())
         votes_df = votes_df[votes_df["date_scrutin"] >= depuis_iso]
 
     stats = {p: int((votes_df["position"] == p).sum()) for p in POSITIONS}
@@ -129,6 +133,10 @@ def load_senateurs_data(departements: list[str], groups: GroupRegistry) -> Senat
             continue
         dept_names.append(sub.iloc[0]["departement"])
         for row in sub.itertuples():
-            entries[row.senateur_ref] = build_senateur_entry(data, row.senateur_ref, groups, row.depuis)
+            # `depuis` est NaN (donc truthy) pour un·e sénateur·rice dont la
+            # fiche n'a pas encore été lue — typiquement un·e nouvel·le élu·e
+            # qui n'a pas encore pris part à un scrutin scrapé.
+            depuis = row.depuis if isinstance(row.depuis, str) else None
+            entries[row.senateur_ref] = build_senateur_entry(data, row.senateur_ref, groups, depuis)
 
     return SenateursData(data, sen_df, groups, entries, dept_names)

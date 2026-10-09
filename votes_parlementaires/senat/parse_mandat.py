@@ -16,15 +16,22 @@ def _clean(text: str) -> str:
 
 def parse_mandat_debut(html_text: str) -> str | None:
     """Date (ISO) du début du mandat sénatorial en cours : la plus récente
-    des dates "Elu(e) le ..." / "Réélu(e) le ..." listées dans le bloc
+    des élections listées sur la fiche (voir parse_elections)."""
+    dates = parse_elections(html_text)
+    return dates[-1] if dates else None
+
+
+def parse_elections(html_text: str) -> list[str]:
+    """Dates (ISO, ordre chronologique) de toutes les élections et
+    réélections listées ("Elu(e) le ...", "Réélu(e) le ...") dans le bloc
     "Mandat sénatorial" de la fiche du/de la sénateur·rice sur senat.fr."""
     soup = BeautifulSoup(html_text, "html.parser")
     heading = soup.find(lambda tag: tag.name in ("h3", "h4") and "Mandat sénatorial" in tag.get_text())
     if heading is None:
-        return None
+        return []
     block = heading.find_next_sibling("p")
     if block is None:
-        return None
+        return []
 
     dates = []
     for m in ELECTION_RE.finditer(_clean(block.get_text(" ", strip=True))):
@@ -33,4 +40,4 @@ def parse_mandat_debut(html_text: str) -> str | None:
         if mois is None:
             continue
         dates.append(f"{annee}-{mois:02d}-{int(jour):02d}")
-    return max(dates) if dates else None
+    return sorted(dates)

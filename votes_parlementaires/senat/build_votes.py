@@ -71,6 +71,9 @@ def _fetch_scrutin_html(annee: int, numero: int, skip_download: bool) -> str:
 
 def build_annee(annee: int, skip_download: bool, scrutin_writer, vote_writer, slugs: dict) -> int:
     numeros = list_scrutin_numeros(annee)
+    if not numeros:
+        print(f"Session {annee} : pas encore de scrutins publiés sur senat.fr, ignorée.")
+        return 0
     print(f"Session {annee} : {len(numeros)} scrutins.")
     for i, numero in enumerate(numeros, start=1):
         html_text = _fetch_scrutin_html(annee, numero, skip_download)
@@ -89,7 +92,6 @@ def _load_existing(path: Path, dtype=None) -> pd.DataFrame | None:
 
 def main(annees: list[int], skip_download: bool = False) -> None:
     senat_processed_dir().mkdir(parents=True, exist_ok=True)
-    annees_set = set(annees)
 
     tmp_scrutins = senat_processed_dir() / "scrutins.new.csv"
     tmp_votes = senat_processed_dir() / "votes.new.csv"
@@ -105,8 +107,14 @@ def main(annees: list[int], skip_download: bool = False) -> None:
         vote_writer.writeheader()
 
         total = 0
+        # Une session sans scrutins publiés (pas encore commencée) ne doit
+        # pas effacer les données déjà présentes pour cette année.
+        annees_set = set()
         for annee in annees:
-            total += build_annee(annee, skip_download, scrutin_writer, vote_writer, slugs)
+            count = build_annee(annee, skip_download, scrutin_writer, vote_writer, slugs)
+            if count:
+                annees_set.add(annee)
+            total += count
 
     fresh_scrutins = pd.read_csv(tmp_scrutins)
     fresh_votes = pd.read_csv(tmp_votes)

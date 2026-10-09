@@ -5,6 +5,7 @@ Usage :
 """
 
 import argparse
+import urllib.error
 from pathlib import Path
 
 from votes_parlementaires.an.legislature import detect_current_legislature
@@ -26,7 +27,16 @@ def main(skip_download: bool = False, legislature: int | None = None) -> None:
         print("Téléchargement ignoré (--skip-download), reconstruction à partir du fichier déjà présent.")
     else:
         print("Téléchargement de la liste des sénateurs...")
-        download_senateurs()
+        try:
+            download_senateurs()
+        except (urllib.error.URLError, TimeoutError) as e:
+            # data.senat.fr est parfois injoignable depuis les runners GitHub.
+            # La liste change rarement : plutôt que de faire échouer tout le
+            # run quotidien, on garde celle déjà committée (et on le signale).
+            if not senateurs_csv().exists():
+                raise
+            print(f"::warning::Liste des sénateurs non rafraîchie ({e}) : liste précédente conservée.")
+            return
 
     print("Construction senateurs.csv...")
     df = load_senateurs(senateurs_csv_raw())

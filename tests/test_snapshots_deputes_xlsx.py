@@ -10,6 +10,13 @@ pytestmark_integration = pytest.mark.skipif(
 )
 
 
+def nb_deputes(departements):
+    from votes_parlementaires.webapp.data import ANData
+
+    actifs = ANData(AN_LEGISLATURE_DEFAULT).deputes_actifs
+    return int(actifs["num_departement"].isin(departements).sum())
+
+
 def test_xlsx_sheet_name_truncates_to_31_chars():
     long_name = "Un Nom De Député Vraiment Beaucoup Trop Long Pour Excel"
     name = xlsx_sheet_name(long_name, set())
@@ -41,7 +48,9 @@ def test_generate_produces_one_sheet_per_depute_plus_reference_sheets(tmp_path):
     wb = openpyxl.load_workbook(out)
     assert wb.sheetnames[0] == "Sommaire"
     assert "Catégories" in wb.sheetnames
-    assert len(wb.sheetnames) == 2 + 8  # Sommaire + Catégories + 8 député·e·s
+    # Sommaire + Catégories + un onglet par député·e en exercice (le nombre
+    # varie quand un siège se libère : on le relit dans les données).
+    assert len(wb.sheetnames) == 2 + nb_deputes(["17", "79"])
 
     for name in wb.sheetnames:
         assert list(wb[name].tables.keys()), f"aucune table Excel sur l'onglet {name!r}"

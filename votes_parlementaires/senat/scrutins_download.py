@@ -31,22 +31,38 @@ def scrutin_url(annee: int, numero: int) -> str:
     return f"https://www.senat.fr/scrutin-public/{annee}/scr{annee}-{numero}.html"
 
 
-def fetch_html(url: str) -> str:
+def fetch_bytes(url: str, timeout: int = 20) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:
-                return response.read().decode("utf-8")
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return response.read()
+        except urllib.error.HTTPError as e:
+            # Une erreur client (404...) ne se résout pas en réessayant.
+            if 400 <= e.code < 500 or attempt == MAX_RETRIES:
+                raise
+            time.sleep(RETRY_BACKOFF_SECONDS * attempt)
         except (urllib.error.URLError, TimeoutError):
             if attempt == MAX_RETRIES:
                 raise
             time.sleep(RETRY_BACKOFF_SECONDS * attempt)
 
 
+def fetch_html(url: str) -> str:
+    return fetch_bytes(url).decode("utf-8")
+
+
 def list_scrutin_numeros(annee: int) -> list[int]:
     """Numéros de tous les scrutins d'une session, en scrapant la page de
-    session (qui liste un lien par scrutin)."""
-    html = fetch_html(session_url(annee))
+    session (qui liste un lien par scrutin). Liste vide si la session n'a pas
+    encore de page : senat.fr ne la crée qu'au premier scrutin, donc la
+    session qui démarre le 1er octobre renvoie 404 pendant quelques jours."""
+    try:
+        html = fetch_html(session_url(annee))
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return []
+        raise
     pattern = re.compile(rf'href="{annee}/scr{annee}-(\d+)\.html"')
     numeros = sorted({int(m.group(1)) for m in pattern.finditer(html)})
     return numeros

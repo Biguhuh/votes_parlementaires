@@ -1,6 +1,7 @@
-"""Construit la date de début du mandat sénatorial en cours de chaque
-sénateur·rice (la plus récente de ses dates d'élection/réélection), utilisée
-pour ne compter la participation qu'à partir de cette date — voir
+"""Construit, pour chaque sénateur·rice, la date de début de son service
+continu (`depuis` : sa première élection) et celle de son mandat en cours
+(`derniere_election`). La participation est comptée depuis `depuis`, pour
+qu'une réélection ne fasse pas disparaître l'historique de vote — voir
 senat/parse_mandat.py.
 
 Nécessite que senateurs.csv et senateurs_slugs.csv existent déjà (voir
@@ -14,6 +15,7 @@ Usage :
 
 import argparse
 import time
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -21,14 +23,25 @@ import pandas as pd
 from votes_parlementaires.config import senat_processed_dir
 from votes_parlementaires.senat.build import senateurs_csv
 from votes_parlementaires.senat.build_votes import senateurs_slugs_csv
-from votes_parlementaires.senat.parse_mandat import parse_mandat_debut
+from votes_parlementaires.senat.parse_mandat import parse_elections
 from votes_parlementaires.senat.senateur_download import download_senateur_page, senateur_html_path
 
 REQUEST_DELAY_SECONDS = 0.3
+MANDAT_ANNEES = 6
 
 
 def mandats_csv() -> Path:
     return senat_processed_dir() / "mandats.csv"
+
+
+def _mandat_expire(depuis) -> bool:
+    """Une date de début de mandat déjà connue reste valable jusqu'à la fin
+    du mandat (6 ans) : au-delà, le/la sénateur·rice a forcément été
+    réélu·e (ou la date est absente) et il faut relire sa fiche."""
+    if not isinstance(depuis, str):
+        return True
+    debut = date.fromisoformat(depuis)
+    return debut.replace(year=debut.year + MANDAT_ANNEES) <= date.today()
 
 
 def _fetch_senateur_html(slug: str, skip_download: bool) -> str:
@@ -51,21 +64,33 @@ def main(skip_download: bool = False, refresh: bool = False) -> None:
 
     previous = None
     if mandats_csv().exists() and not refresh:
-        previous = pd.read_csv(mandats_csv()).set_index("senateur_ref")["depuis"].to_dict()
+        known = pd.read_csv(mandats_csv())
+        # Ancien format (une seule colonne `depuis`) : tout est à relire.
+        if "derniere_election" in known.columns:
+            previous = known.set_index("senateur_ref").to_dict("index")
 
     rows = []
     missing_slug = []
     for i, ref in enumerate(senateurs["senateur_ref"], start=1):
-        if previous is not None and ref in previous:
-            rows.append({"senateur_ref": ref, "depuis": previous[ref]})
+        if previous is not None and ref in previous and not _mandat_expire(previous[ref]["derniere_election"]):
+            rows.append({"senateur_ref": ref, **previous[ref]})
             continue
         slug = slugs.get(ref)
         if slug is None:
             missing_slug.append(ref)
             continue
         html_text = _fetch_senateur_html(slug, skip_download)
-        depuis = parse_mandat_debut(html_text)
-        rows.append({"senateur_ref": ref, "depuis": depuis})
+        elections = parse_elections(html_text)
+        # `depuis` : début du service continu (première élection listée) ;
+        # `derniere_election` : début du mandat en cours, qui sert à savoir
+        # quand relire la fiche (réélection).
+        rows.append(
+            {
+                "senateur_ref": ref,
+                "depuis": elections[0] if elections else None,
+                "derniere_election": elections[-1] if elections else None,
+            }
+        )
         if i % 50 == 0:
             print(f"  ...{i}/{len(senateurs)} sénateur·rice·s traité·e·s")
 
