@@ -251,3 +251,12 @@ couleurs de catégorie). Les tests d'intégration bout-en-bout
 (`test_snapshots_integration.py`, `test_snapshots_deputes_xlsx.py`) se sautent
 automatiquement si les CSV de la 17e législature n'ont pas encore été
 construits (`python -m votes_parlementaires.an.build`).
+
+## Licence
+
+Le code est sous licence MIT (voir [LICENSE](LICENSE)) : réutilisation libre, en gardant la mention de copyright.
+
+Les données de vote viennent de
+[data.assemblee-nationale.fr](https://data.assemblee-nationale.fr/travaux-parlementaires/votes),
+publiées sous [Licence Ouverte / Open Licence](https://data.assemblee-nationale.fr/licence-ouverte-open-licence)
+(Etalab). Elles ne sont pas couvertes par la licence MIT.
