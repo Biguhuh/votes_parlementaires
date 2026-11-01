@@ -15,6 +15,7 @@ Usage :
 
 import argparse
 import time
+import urllib.error
 from datetime import date
 from pathlib import Path
 
@@ -71,6 +72,7 @@ def main(skip_download: bool = False, refresh: bool = False) -> None:
 
     rows = []
     missing_slug = []
+    network_down = False
     for i, ref in enumerate(senateurs["senateur_ref"], start=1):
         if previous is not None and ref in previous and not _mandat_expire(previous[ref]["derniere_election"]):
             rows.append({"senateur_ref": ref, **previous[ref]})
@@ -79,7 +81,20 @@ def main(skip_download: bool = False, refresh: bool = False) -> None:
         if slug is None:
             missing_slug.append(ref)
             continue
-        html_text = _fetch_senateur_html(slug, skip_download)
+        if network_down:
+            if previous is not None and ref in previous:
+                rows.append({"senateur_ref": ref, **previous[ref]})
+            continue
+        try:
+            html_text = _fetch_senateur_html(slug, skip_download)
+        except (urllib.error.URLError, TimeoutError) as e:
+            # senat.fr injoignable (voir senat/scrutins_download.py) : inutile
+            # de réessayer les fiches suivantes une à une, on garde ce qu'on a.
+            network_down = True
+            print(f"::warning::Fiches des sénateurs non rafraîchies ({e}) : dates précédentes conservées.")
+            if previous is not None and ref in previous:
+                rows.append({"senateur_ref": ref, **previous[ref]})
+            continue
         elections = parse_elections(html_text)
         # `depuis` : début du service continu (première élection listée) ;
         # `derniere_election` : début du mandat en cours, qui sert à savoir

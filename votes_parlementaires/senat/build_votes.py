@@ -14,6 +14,7 @@ Usage :
 import argparse
 import csv
 import time
+import urllib.error
 from pathlib import Path
 
 import pandas as pd
@@ -97,24 +98,37 @@ def main(annees: list[int], skip_download: bool = False) -> None:
     tmp_votes = senat_processed_dir() / "votes.new.csv"
     slugs: dict[str, str] = {}
 
-    with (
-        open(tmp_scrutins, "w", newline="", encoding="utf-8") as sf,
-        open(tmp_votes, "w", newline="", encoding="utf-8") as vf,
-    ):
-        scrutin_writer = csv.DictWriter(sf, fieldnames=SCRUTIN_FIELDS)
-        vote_writer = csv.DictWriter(vf, fieldnames=VOTE_FIELDS)
-        scrutin_writer.writeheader()
-        vote_writer.writeheader()
+    try:
+        with (
+            open(tmp_scrutins, "w", newline="", encoding="utf-8") as sf,
+            open(tmp_votes, "w", newline="", encoding="utf-8") as vf,
+        ):
+            scrutin_writer = csv.DictWriter(sf, fieldnames=SCRUTIN_FIELDS)
+            vote_writer = csv.DictWriter(vf, fieldnames=VOTE_FIELDS)
+            scrutin_writer.writeheader()
+            vote_writer.writeheader()
 
-        total = 0
-        # Une session sans scrutins publiés (pas encore commencée) ne doit
-        # pas effacer les données déjà présentes pour cette année.
-        annees_set = set()
-        for annee in annees:
-            count = build_annee(annee, skip_download, scrutin_writer, vote_writer, slugs)
-            if count:
-                annees_set.add(annee)
-            total += count
+            total = 0
+            # Une session sans scrutins publiés (pas encore commencée) ne doit
+            # pas effacer les données déjà présentes pour cette année.
+            annees_set = set()
+            for annee in annees:
+                count = build_annee(annee, skip_download, scrutin_writer, vote_writer, slugs)
+                if count:
+                    annees_set.add(annee)
+                total += count
+    except (urllib.error.URLError, TimeoutError) as e:
+        # senat.fr est parfois injoignable depuis les runners GitHub. Les CSV
+        # ne sont réécrits qu'à la fin : ceux déjà committés sont intacts. Plutôt
+        # que de faire échouer tout le run (et de ne plus rafraîchir l'Assemblée
+        # ni la page), on les garde et on le signale ; la page indique de toute
+        # façon la date du dernier scrutin Sénat pris en compte.
+        tmp_scrutins.unlink(missing_ok=True)
+        tmp_votes.unlink(missing_ok=True)
+        if not scrutins_csv().exists():
+            raise
+        print(f"::warning::Scrutins du Sénat non rafraîchis ({e}) : données précédentes conservées.")
+        return
 
     fresh_scrutins = pd.read_csv(tmp_scrutins)
     fresh_votes = pd.read_csv(tmp_votes)

@@ -18,9 +18,12 @@ USER_AGENT = "Mozilla/5.0 (compatible; votes-parlementaires-bot)"
 
 # senat.fr n'a pas d'API : on scrape des centaines/milliers de pages HTML
 # d'affilée, sur lesquelles quelques échecs réseau transitoires (timeout TLS,
-# reset...) sont attendus — on retente avant d'abandonner.
-MAX_RETRIES = 3
-RETRY_BACKOFF_SECONDS = 3
+# reset...) sont attendus — on retente avant d'abandonner. Depuis les runners
+# GitHub, www.senat.fr est par moments injoignable plus d'une minute (chaque
+# essai attend alors son timeout) : on laisse donc passer ces coupures
+# (jusqu'à ~3 min d'attente cumulée) avant de renoncer.
+MAX_RETRIES = 5
+RETRY_BACKOFF_SECONDS = 10
 
 
 def session_url(annee: int) -> str:
