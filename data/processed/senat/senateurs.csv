@@ -149,7 +149,6 @@ senateur_ref,civ,nom,prenom,etat,groupe_libelle,departement,commission,num_depar
 20286Q,Mme,Gacquerre,Amel,ACTIF,UCI,Pas-de-Calais,commission des affaires économiques,62,Hauts-de-France
 20172F,Mme,Garnier,Laurence,ACTIF,Les Républicains,Loire-Atlantique,commission de la culture,44,Pays de la Loire
 21722T,Mme,Gasto Oustric,Magali,ACTIF,RDSE,Haute-Garonne,commission des affaires économiques,31,Occitanie
-14231L,Mme,Gatel,Françoise,ACTIF,UCI,Ille-et-Vilaine,commission des lois,35,Bretagne
 19695N,M.,Gay,Fabien,ACTIF,CRCE-K,Seine-Saint-Denis,commission des affaires économiques,93,Ile-de-France
 20120S,M.,Genet,Fabien,ACTIF,Les Républicains,Saône-et-Loire,commission des affaires étrangères,71,Bourgogne-Franche-Comté
 18153G,M.,Gibbs,Daniel,ACTIF,Les Républicains,Saint-Martin,commission des finances,,
@@ -270,6 +269,7 @@ senateur_ref,civ,nom,prenom,etat,groupe_libelle,departement,commission,num_depar
 14191V,M.,Panunzi,Jean-Jacques,ACTIF,Les Républicains,Corse-du-Sud,commission des lois,2A,Corse
 20050V,Mme,Paoli-Gagin,Vanina,ACTIF,Les Indépendants,Aube,commission des finances,10,Grand Est
 20036X,M.,Parigi,Paul Toussaint,ACTIF,UCI,Haute-Corse,commission des lois,2B,Corse
+21421H,Mme,Patru,Anne-Sophie,ACTIF,UCI,Ille-et-Vilaine,Aucune,35,Bretagne
 21055F,M.,Paumier,Jean-Gérard,ACTIF,Les Républicains,Indre-et-Loire,commission de la culture,37,Centre-Val de Loire
 14237S,M.,Pellevat,Cyril,ACTIF,UCI,Haute-Savoie,commission des affaires économiques,74,Auvergne-Rhône-Alpes
 21724V,M.,Péré,Marc,ACTIF,GEST,Haute-Garonne,commission des affaires économiques,31,Occitanie
@@ -297,7 +297,7 @@ senateur_ref,civ,nom,prenom,etat,groupe_libelle,departement,commission,num_depar
 20054A,M.,Rietmann,Olivier,ACTIF,Les Républicains,Haute-Saône,commission des affaires économiques,70,Bourgogne-Franche-Comté
 14229S,Mme,Robert,Sylvie,ACTIF,SER,Ille-et-Vilaine,commission de la culture,35,Bretagne
 21660W,M.,Robin,Alexis,ACTIF,Les Républicains,Eure-et-Loir,commission de l'aménagement du territoire et du développement durable,28,Centre-Val de Loire
-21070E,M.,Rochette,Pierre Jean,ACTIF,Les Indépendants,Loire,commission des lois,42,Auvergne-Rhône-Alpes
+21070E,M.,Rochette,Pierre Jean,ACTIF,NI,Loire,commission des lois,42,Auvergne-Rhône-Alpes
 21056G,M.,Roiron,Pierre-Alain,ACTIF,SER,Indre-et-Loire,commission des lois,37,Centre-Val de Loire
 20020P,M.,Rojouan,Bruno,ACTIF,Les Républicains,Allier,commission de l'aménagement du territoire et du développement durable,03,Auvergne-Rhône-Alpes
 21654Y,Mme,Rolando,Carole,ACTIF,SER,Gers,commission des affaires sociales,32,Occitanie
