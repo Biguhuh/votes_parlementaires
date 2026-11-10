@@ -355,7 +355,7 @@ def generate(
     if build_date is None:
         snapshot_label = "Date de rafraîchissement inconnue (reconstruire via build.py) — source data.assemblee-nationale.fr"
     else:
-        snapshot_label = f"Rafraîchi le <strong>{fmt_date(build_date.isoformat(), MOIS_FULL)}</strong> — source data.assemblee-nationale.fr"
+        snapshot_label = f"Mis à jour le <strong>{fmt_date(build_date.isoformat(), MOIS_FULL)}</strong> — source data.assemblee-nationale.fr"
 
     if len(dept_names) > 1:
         joined_names = ", ".join(dept_names[:-1]) + " & " + dept_names[-1]

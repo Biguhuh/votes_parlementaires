@@ -102,7 +102,7 @@ def generate(
         snapshot_label = "Date de rafraîchissement inconnue (reconstruire via build.py)"
     else:
         snapshot_label = (
-            f"Rafraîchi le <strong>{fmt_date(build_date.isoformat(), MOIS_FULL)}</strong> — "
+            f"Mis à jour le <strong>{fmt_date(build_date.isoformat(), MOIS_FULL)}</strong> — "
             f"Assemblée nationale ({to_roman(legislature)}<sup>e</sup> législature) & Sénat"
         )
 
